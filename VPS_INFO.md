@@ -48,7 +48,26 @@ ssh -i oracle-vps.key ubuntu@144.22.237.86
 
 ---
 
-## 🚀 Gerenciamento do Bot no Servidor
+## ⚡ Otimização de Memória
+- **Memória RAM Física:** 1 GB
+- **Memória Swap no SSD:** 4 GB (`/swapfile` ativado e persistido no `/etc/fstab`)
+
+---
+
+## 🔄 Deploy Automático (CI/CD via GitHub Actions)
+O repositório possui integração contínua (CI/CD) configurada via **GitHub Actions** (`.github/workflows/deploy.yml`).
+
+- **Como funciona:** Sempre que um commit for enviado para a branch `main` (`git push origin main`), o GitHub Actions:
+  1. Conecta via SSH na VPS usando as credenciais seguras (`secrets.VPS_SSH_KEY`, etc.).
+  2. Transfere os arquivos atualizados para `~/app`.
+  3. Reconstrói o container Docker automaticamente (`sudo docker compose up --build -d`).
+  4. Mantém o banco SQLite (`data/`) e a sessão do WhatsApp (`auth/`) intactos.
+- **Histórico e Status de Deploys:** Você pode acompanhar o status de cada deploy na aba **Actions** do repositório no GitHub:
+  👉 [https://github.com/isaqueschaffer/BotMercadolivre/actions](https://github.com/isaqueschaffer/BotMercadolivre/actions)
+
+---
+
+## 🚀 Gerenciamento Manual do Bot no Servidor
 O código do bot está localizado na pasta `~/app` da máquina.
 
 ### Ver logs em tempo real:
@@ -61,7 +80,8 @@ sudo docker logs -f affiliate-bot
 cd ~/app && sudo docker compose restart
 ```
 
-### Reconstruir e atualizar a aplicação:
+### Reconstruir e atualizar a aplicação manualmente:
 ```bash
 cd ~/app && sudo docker compose up --build -d
 ```
+
