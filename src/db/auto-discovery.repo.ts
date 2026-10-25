@@ -49,7 +49,7 @@ export function getAutoDiscoveryConfig(): AutoDiscoveryConfig {
 export function updateAutoDiscoveryConfig(config: Partial<AutoDiscoveryConfig>): void {
   const db = getDb();
   const sets: string[] = [];
-  const params: unknown[] = [];
+  const params: any[] = [];
 
   if (config.enabled !== undefined) {
     sets.push('enabled = ?');

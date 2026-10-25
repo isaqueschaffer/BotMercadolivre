@@ -85,7 +85,7 @@ export function updateAffiliateUrl(id: number, affiliateUrl: string): void {
 export function updateProductDetails(id: number, fields: { headline?: string | null; couponCode?: string | null }): void {
   const db = getDb();
   const sets: string[] = [];
-  const params: unknown[] = [];
+  const params: any[] = [];
 
   if (fields.headline !== undefined) { sets.push('headline = ?'); params.push(fields.headline); }
   if (fields.couponCode !== undefined) { sets.push('coupon_code = ?'); params.push(fields.couponCode); }

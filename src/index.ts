@@ -4,6 +4,7 @@ dns.setDefaultResultOrder('ipv4first');
 import { config } from './config';
 import { initDatabase } from './db/database';
 import { MercadoLivreMarketplace } from './marketplace/mercadolivre/ml-marketplace';
+import { marketplaceManager } from './marketplace/marketplace-manager';
 import { TelegramBot } from './messenger/telegram/telegram-bot';
 import { WhatsAppBot } from './messenger/whatsapp/whatsapp-bot';
 import { MessengerProvider } from './messenger/messenger.interface';
@@ -20,9 +21,9 @@ async function main(): Promise<void> {
   await initDatabase();
   console.log('✅ Banco de dados inicializado.\n');
 
-  // 2. Marketplace
-  const marketplace = new MercadoLivreMarketplace();
-  await marketplace.initialize();
+  // 2. Marketplaces (Mercado Livre, Shopee, etc.)
+  await marketplaceManager.initializeAll();
+  const marketplace = marketplaceManager.get('mercadolivre')!;
   console.log('');
 
   // 3. Messengers

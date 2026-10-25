@@ -10,6 +10,7 @@ import { MessengerProvider } from '../messenger.interface';
 import { executePost } from '../../services/posting-service';
 import { fetchByQuery } from '../../services/product-fetcher';
 import { generateHeadline } from '../../services/headline-generator';
+import { marketplaceManager } from '../../marketplace/marketplace-manager';
 
 export type SetMessengersFn = (messengers: MessengerProvider[]) => void;
 
@@ -141,7 +142,7 @@ export function registerAdvancedCommands(
     await ctx.reply('⏳ Buscando produto...');
 
     try {
-      const product = await marketplace.getProduct(url);
+      const product = await marketplaceManager.getProductFromAny(url);
       if (!product) {
         return ctx.reply('❌ Produto não encontrado. Verifique a URL.');
       }

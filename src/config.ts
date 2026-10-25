@@ -23,6 +23,15 @@ export const config = {
     redirectUri: optional('ML_REDIRECT_URI', 'https://gerador-de-aula-de-pilates.isaquegeovaneschaffer.workers.dev/aulas/abc03d71-9ddd-5966-a535-dcd8244a216c'),
     affiliateId: required('ML_AFFILIATE_ID'),
   },
+  shopee: {
+    appId: optional('SHOPEE_APP_ID', ''),
+    secret: optional('SHOPEE_SECRET', ''),
+  },
+  amazon: {
+    partnerTag: optional('AMAZON_PARTNER_TAG', ''),
+    accessKey: optional('AMAZON_ACCESS_KEY', ''),
+    secretKey: optional('AMAZON_SECRET_KEY', ''),
+  },
   telegram: {
     botToken: required('TELEGRAM_BOT_TOKEN'),
     adminIds: required('TELEGRAM_ADMIN_IDS').split(',').map(Number),

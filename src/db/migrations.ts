@@ -118,6 +118,20 @@ export function runMigrations(db: Database): void {
 
   db.run(`INSERT OR IGNORE INTO ai_config (id) VALUES (1)`);
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS marketplace_config (
+      id                 INTEGER PRIMARY KEY CHECK (id = 1),
+      shopee_app_id      TEXT,
+      shopee_secret      TEXT,
+      amazon_partner_tag TEXT,
+      amazon_access_key  TEXT,
+      amazon_secret_key  TEXT,
+      updated_at         TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  db.run(`INSERT OR IGNORE INTO marketplace_config (id) VALUES (1)`);
+
   try { db.run('ALTER TABLE products ADD COLUMN headline TEXT'); } catch {}
   try { db.run('ALTER TABLE products ADD COLUMN coupon_code TEXT'); } catch {}
   try { db.run('ALTER TABLE products ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0'); } catch {}

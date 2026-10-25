@@ -384,6 +384,7 @@
       <button class="tab" data-tab="groups">Grupos</button>
       <button class="tab" data-tab="autodiscovery">Auto Discovery</button>
       <button class="tab" data-tab="ai">🤖 IA</button>
+      <button class="tab" data-tab="marketplaces">🏬 Lojas</button>
     </div>
 
     <!-- Products Panel -->
@@ -391,7 +392,7 @@
       <div class="card">
         <h3>Adicionar Produto</h3>
         <div class="input-row">
-          <input type="text" id="add-url" placeholder="Cole a URL do produto do Mercado Livre..." style="flex:2">
+          <input type="text" id="add-url" placeholder="Cole a URL do produto (Mercado Livre ou Shopee)..." style="flex:2">
           <button class="btn-primary" onclick="addProduct()">Adicionar</button>
         </div>
         <div class="input-row">
@@ -726,6 +727,93 @@
           <p><strong style="color:var(--text)">2.</strong> Esse título aparece em destaque no post enviado para os grupos.</p>
           <p><strong style="color:var(--text)">3.</strong> Se nenhuma chave for configurada, o bot usa o próprio nome do produto como título.</p>
           <p style="margin-top:8px"><strong style="color:var(--text)">Custo estimado:</strong> ~0,001 centavos por produto com modelos baratos (gpt-4o-mini, gemini-flash, claude-haiku).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Marketplaces Panel -->
+    <div class="panel" id="panel-marketplaces">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <h3 style="margin:0">🏬 Lojas & Afiliados</h3>
+          <div id="mp-status-badges" style="display:flex;gap:6px"></div>
+        </div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:24px">
+          Configure suas contas de afiliado. O bot detecta automaticamente o marketplace de qualquer link que você colar e gera o link oficial com a sua comissão.
+        </p>
+
+        <!-- Shopee Section -->
+        <div style="background:var(--surface2);border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid var(--border)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:24px">🟠</span>
+              <div>
+                <h4 style="margin:0;font-size:16px">Shopee Afiliados</h4>
+                <div style="font-size:12px;color:var(--text2)">Open API (GraphQL) oficial da Shopee</div>
+              </div>
+            </div>
+            <div id="shopee-badge"><span class="badge badge-yellow">Não configurada</span></div>
+          </div>
+
+          <div style="margin-bottom:12px">
+            <label style="display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Shopee App ID</label>
+            <input type="text" id="shopee-app-id" placeholder="Ex: 1234567890" style="width:100%">
+          </div>
+
+          <div style="margin-bottom:12px">
+            <label style="display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Shopee Secret Key</label>
+            <div style="display:flex;gap:8px">
+              <input type="password" id="shopee-secret" placeholder="Cole sua Secret Key..." autocomplete="off" style="flex:1">
+              <button class="btn-outline btn-small" onclick="toggleKeyVisibility('shopee-secret', this)">👁️</button>
+            </div>
+            <div style="font-size:11px;color:var(--text2);margin-top:4px">
+              Obtenha em <a href="https://afiliados.shopee.com.br" target="_blank" style="color:var(--accent2)">afiliados.shopee.com.br</a> ➔ Configurações da Conta ➔ Open API.
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:14px">
+            <button class="btn-primary btn-small" onclick="saveShopeeConfig()">💾 Salvar Shopee</button>
+            <button class="btn-outline btn-small" onclick="testShopeeConnection()" id="shopee-test-btn">🧪 Testar Conexão</button>
+          </div>
+          <div id="shopee-test-result" style="margin-top:10px;font-size:13px;display:none"></div>
+        </div>
+
+        <!-- Amazon Section -->
+        <div style="background:var(--surface2);border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid var(--border)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:24px">📦</span>
+              <div>
+                <h4 style="margin:0;font-size:16px">Amazon Associados</h4>
+                <div style="font-size:12px;color:var(--text2)">Tag de rastreamento e PA-API 5.0</div>
+              </div>
+            </div>
+            <div id="amazon-badge"><span class="badge badge-yellow">Em breve</span></div>
+          </div>
+
+          <div style="margin-bottom:12px">
+            <label style="display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Associate / Partner Tag (ex: seunome-20)</label>
+            <input type="text" id="amazon-tag" placeholder="ex: seunome-20" style="width:100%">
+            <div style="font-size:11px;color:var(--text2);margin-top:4px">Sua ID de rastreamento do portal de Associados Amazon Brasil.</div>
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:14px">
+            <button class="btn-primary btn-small" onclick="saveAmazonConfig()">💾 Salvar Amazon</button>
+          </div>
+        </div>
+
+        <!-- Mercado Livre Section -->
+        <div style="background:var(--surface2);border-radius:12px;padding:20px;border:1px solid var(--border)">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:24px">🟡</span>
+              <div>
+                <h4 style="margin:0;font-size:16px">Mercado Livre</h4>
+                <div style="font-size:12px;color:var(--text2)">Conexão oficial OAuth2 com Mercado Livre Brasil</div>
+              </div>
+            </div>
+            <div><span class="badge badge-green">Conectado ✅</span></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1637,6 +1725,99 @@
       }
     }
 
+    // ───────────────────────── Marketplaces Config ─────────────────────────
+    async function loadMarketplacesConfig() {
+      try {
+        const data = await api('/marketplaces/config');
+        if (data.shopeeAppId) {
+          document.getElementById('shopee-app-id').value = data.shopeeAppId;
+        }
+        if (data.shopeeSecretMasked) {
+          document.getElementById('shopee-secret').placeholder = data.shopeeSecretMasked;
+        }
+        if (data.amazonPartnerTag) {
+          document.getElementById('amazon-tag').value = data.amazonPartnerTag;
+        }
+
+        // Shopee badge
+        const shopeeBadge = document.getElementById('shopee-badge');
+        if (data.shopeeConfigured) {
+          shopeeBadge.innerHTML = '<span class="badge badge-green">Configurada ✅</span>';
+        } else {
+          shopeeBadge.innerHTML = '<span class="badge badge-yellow">Não configurada</span>';
+        }
+
+        // Amazon badge
+        const amazonBadge = document.getElementById('amazon-badge');
+        if (data.amazonConfigured) {
+          amazonBadge.innerHTML = '<span class="badge badge-green">Configurada (' + esc(data.amazonPartnerTag) + ')</span>';
+        } else {
+          amazonBadge.innerHTML = '<span class="badge badge-yellow">Sem tag</span>';
+        }
+      } catch (e) {
+        console.error('Erro ao carregar configuracao de marketplaces', e);
+      }
+    }
+
+    async function saveShopeeConfig() {
+      const shopeeAppId = document.getElementById('shopee-app-id').value.trim();
+      const shopeeSecret = document.getElementById('shopee-secret').value.trim();
+
+      const body = { shopeeAppId };
+      if (shopeeSecret) body.shopeeSecret = shopeeSecret;
+
+      try {
+        const res = await api('/marketplaces/config', { method: 'PUT', body });
+        if (res.error) throw new Error(res.error);
+        showToast('Configuração da Shopee salva!');
+        if (shopeeSecret) document.getElementById('shopee-secret').value = '';
+        loadMarketplacesConfig();
+      } catch (e) {
+        showToast('Erro ao salvar Shopee: ' + e.message, true);
+      }
+    }
+
+    async function testShopeeConnection() {
+      const btn = document.getElementById('shopee-test-btn');
+      const result = document.getElementById('shopee-test-result');
+      btn.disabled = true;
+      btn.textContent = '⏳ Testando...';
+      result.style.display = 'none';
+
+      try {
+        // Se digitou agora, salva primeiro
+        const secretTyped = document.getElementById('shopee-secret').value.trim();
+        const appIdTyped = document.getElementById('shopee-app-id').value.trim();
+        if (secretTyped || appIdTyped) {
+          await saveShopeeConfig();
+        }
+
+        const res = await api('/marketplaces/shopee/test', { method: 'POST' });
+        if (res.error) throw new Error(res.error);
+
+        result.style.display = 'block';
+        result.innerHTML = `<span style="color:var(--green)">✅ Conexão com Shopee Afiliados bem sucedida!<br>Autenticação GraphQL OK! Link de teste gerado com sucesso.</span>`;
+      } catch (e) {
+        result.style.display = 'block';
+        result.innerHTML = `<span style="color:var(--red)">❌ Erro: ${esc(e.message)}</span>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🧪 Testar Conexão';
+      }
+    }
+
+    async function saveAmazonConfig() {
+      const amazonPartnerTag = document.getElementById('amazon-tag').value.trim();
+      try {
+        const res = await api('/marketplaces/config', { method: 'PUT', body: { amazonPartnerTag } });
+        if (res.error) throw new Error(res.error);
+        showToast('Configuração da Amazon salva!');
+        loadMarketplacesConfig();
+      } catch (e) {
+        showToast('Erro ao salvar Amazon: ' + e.message, true);
+      }
+    }
+
     // Init
     loadStatus();
     loadProducts();
@@ -1647,6 +1828,7 @@
     loadAutoDiscovery();
     loadAdCategories();
     loadAIConfig();
+    loadMarketplacesConfig();
     checkMessengersStatus();
     setInterval(loadStatus, 15000);
   </script>

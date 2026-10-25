@@ -14,6 +14,9 @@ import { getAutoDiscoveryConfig, updateAutoDiscoveryConfig } from '../db/auto-di
 import { getAutoDiscoveryStatus, runDiscoveryNow, restartAutoDiscovery } from '../services/auto-discovery';
 import { generateHeadline, generateHeadlineOrThrow } from '../services/headline-generator';
 import { getAIConfig, updateAIConfig } from '../db/ai-config.repo';
+import { marketplaceManager } from '../marketplace/marketplace-manager';
+import { getMarketplaceConfig, updateMarketplaceConfig } from '../db/marketplace-config.repo';
+import { searchShopeeOffers } from '../marketplace/shopee/shopee-api';
 
 export function createWebServer(
   marketplace: MarketplaceProvider,
@@ -55,7 +58,7 @@ export function createWebServer(
     if (!url) return res.status(400).json({ error: 'URL é obrigatória' });
 
     try {
-      const product = await marketplace.getProduct(url);
+      const product = await marketplaceManager.getProductFromAny(url);
       if (!product) return res.status(404).json({ error: 'Produto não encontrado' });
 
       const finalHeadline = headline || await generateHeadline(product.title, product.category);
@@ -330,6 +333,50 @@ export function createWebServer(
     try {
       const headline = await generateHeadlineOrThrow('Fone de Ouvido Bluetooth JBL Wave Buds', 'Eletrônicos');
       res.json({ success: true, headline });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Marketplaces Config
+  app.get('/api/marketplaces/config', (_req, res) => {
+    const cfg = getMarketplaceConfig();
+    const mask = (k: string | null) => k ? k.slice(0, 6) + '••••••••' : null;
+    res.json({
+      shopeeAppId: cfg.shopeeAppId,
+      shopeeConfigured: Boolean(cfg.shopeeAppId && cfg.shopeeSecret),
+      shopeeSecretMasked: mask(cfg.shopeeSecret),
+      amazonPartnerTag: cfg.amazonPartnerTag,
+      amazonConfigured: Boolean(cfg.amazonPartnerTag),
+      amazonAccessKey: cfg.amazonAccessKey,
+      amazonSecretMasked: mask(cfg.amazonSecretKey),
+    });
+  });
+
+  app.put('/api/marketplaces/config', (req, res) => {
+    try {
+      const { shopeeAppId, shopeeSecret, amazonPartnerTag, amazonAccessKey, amazonSecretKey } = req.body;
+      updateMarketplaceConfig({
+        shopeeAppId,
+        shopeeSecret: shopeeSecret || undefined,
+        amazonPartnerTag,
+        amazonAccessKey,
+        amazonSecretKey: amazonSecretKey || undefined,
+      });
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/marketplaces/shopee/test', async (_req, res) => {
+    try {
+      const prods = await searchShopeeOffers('fone', 1);
+      if (prods.length > 0) {
+        res.json({ success: true, message: `Conexão bem-sucedida! Produto teste: "${prods[0].title}"` });
+      } else {
+        res.json({ success: true, message: 'Conexão estabelecida com a Shopee Open API!' });
+      }
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }
