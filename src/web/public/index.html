@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bot de Afiliados</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #242836;
+      --border: #2e3348;
+      --text: #e4e6f0;
+      --text2: #8b8fa3;
+      --accent: #6c5ce7;
+      --accent2: #a29bfe;
+      --green: #00b894;
+      --red: #e17055;
+      --yellow: #fdcb6e;
+      --blue: #0984e3;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header h1 { font-size: 20px; font-weight: 700; }
+    .header h1 span { color: var(--accent2); }
+
+    .status-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      display: inline-block; margin-right: 6px;
+    }
+    .status-dot.online { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .status-dot.offline { background: var(--red); }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .stat-card .number { font-size: 32px; font-weight: 800; color: var(--accent2); }
+    .stat-card .label { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+    .tab {
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text2);
+      border: none;
+      background: none;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .tab:hover { color: var(--text); background: var(--surface2); }
+    .tab.active { color: white; background: var(--accent); }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .card h3 { font-size: 16px; margin-bottom: 16px; }
+
+    .input-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    input, select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 14px;
+      flex: 1;
+      outline: none;
+    }
+    input:focus { border-color: var(--accent); }
+
+    button {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: var(--accent2); }
+    .btn-success { background: var(--green); color: white; }
+    .btn-success:hover { opacity: 0.9; }
+    .btn-danger { background: var(--red); color: white; }
+    .btn-danger:hover { opacity: 0.9; }
+    .btn-small { padding: 6px 14px; font-size: 12px; }
+    .btn-outline {
+      background: transparent;
+      color: var(--accent2);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { border-color: var(--accent); }
+
+    .product-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .product-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .product-item img {
+      width: 64px; height: 64px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: var(--border);
+    }
+    .product-info { flex: 1; min-width: 0; }
+    .product-info .title {
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .product-info .meta { font-size: 12px; color: var(--text2); margin-top: 4px; }
+    .product-info .price { font-size: 16px; font-weight: 700; color: var(--green); margin-top: 4px; }
+    .product-info .discount {
+      font-size: 12px;
+      background: var(--red);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+    .product-info .old-price {
+      text-decoration: line-through;
+      color: var(--text2);
+      font-size: 13px;
+      margin-right: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+    th { color: var(--text2); font-weight: 500; font-size: 12px; text-transform: uppercase; }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .badge-green { background: rgba(0,184,148,0.15); color: var(--green); }
+    .badge-yellow { background: rgba(253,203,110,0.15); color: var(--yellow); }
+    .badge-red { background: rgba(225,112,85,0.15); color: var(--red); }
+    .badge-blue { background: rgba(9,132,227,0.15); color: var(--blue); }
+
+    .empty { text-align: center; padding: 40px; color: var(--text2); }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--green);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 14px;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 1000;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.error { background: var(--red); }
+
+    .loading { opacity: 0.5; pointer-events: none; }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 480px;
+      padding: 0;
+      transform: translateY(20px) scale(0.97);
+      transition: transform 0.25s;
+      overflow: hidden;
+    }
+    .modal-overlay.open .modal {
+      transform: translateY(0) scale(1);
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-header img {
+      width: 56px;
+      height: 56px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: var(--border);
+    }
+    .modal-header-text {
+      flex: 1;
+      min-width: 0;
+    }
+    .modal-header-text h4 {
+      font-size: 15px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .modal-header-text span {
+      font-size: 12px;
+      color: var(--text2);
+      margin-top: 2px;
+      display: block;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text2);
+      font-size: 22px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      line-height: 1;
+    }
+    .modal-close:hover { color: var(--text); background: var(--surface2); }
+    .modal-body { padding: 20px; }
+    .modal-body label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text2);
+      margin-bottom: 6px;
+    }
+    .modal-body input {
+      width: 100%;
+      margin-bottom: 16px;
+    }
+    .modal-body .hint {
+      font-size: 11px;
+      color: var(--text2);
+      margin-top: -12px;
+      margin-bottom: 16px;
+    }
+    .modal-preview {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-line;
+      color: var(--text);
+    }
+    .modal-preview .preview-headline {
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--accent2);
+    }
+    .modal-preview .preview-price { font-weight: 700; }
+    .modal-preview .preview-coupon { color: var(--yellow); }
+    .modal-preview .preview-link { color: var(--blue); font-size: 12px; }
+    .modal-preview .preview-shipping { color: var(--green); font-size: 12px; }
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 600px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .input-row { flex-direction: column; }
+      .header h1 { font-size: 16px; }
+      .modal { width: 95%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🚀 <span>Bot de Afiliados</span></h1>
+    <div id="connection-status">
+      <span class="status-dot offline"></span>
+      <span style="font-size:13px;color:var(--text2)">Conectando...</span>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="stats-grid" id="stats">
+      <div class="stat-card"><div class="number" id="stat-pending">-</div><div class="label">Pendentes</div></div>
+      <div class="stat-card"><div class="number" id="stat-posted">-</div><div class="label">Postados</div></div>
+      <div class="stat-card"><div class="number" id="stat-groups">-</div><div class="label">Grupos</div></div>
+      <div class="stat-card"><div class="number" id="stat-scheduler">-</div><div class="label">Postagem Auto</div></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="products">Produtos</button>
+      <button class="tab" data-tab="discover">Descobrir</button>
+      <button class="tab" data-tab="schedules">Postagem</button>
+      <button class="tab" data-tab="groups">Grupos</button>
+      <button class="tab" data-tab="autodiscovery">Auto Discovery</button>
+      <button class="tab" data-tab="ai">🤖 IA</button>
+    </div>
+
+    <!-- Products Panel -->
+    <div class="panel active" id="panel-products">
+      <div class="card">
+        <h3>Adicionar Produto</h3>
+        <div class="input-row">
+          <input type="text" id="add-url" placeholder="Cole a URL do produto do Mercado Livre..." style="flex:2">
+          <button class="btn-primary" onclick="addProduct()">Adicionar</button>
+        </div>
+        <div class="input-row">
+          <input type="text" id="add-headline" placeholder="Título chamativo (ex: FONE TOP BLUETOOTH)" style="flex:1">
+          <input type="text" id="add-coupon" placeholder="Cupom (ex: ESQUENTA15)" style="flex:1;max-width:200px">
+        </div>
+        <div style="font-size:12px;color:var(--text2)">
+          Título e cupom são opcionais. O título aparece em destaque no post. Sem título, usa um resumo do nome do produto.
+        </div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h3 style="margin:0">Fila de Produtos</h3>
+          <div style="display:flex;gap:8px">
+            <select id="filter-status" onchange="loadProducts()" style="flex:none;width:auto">
+              <option value="pending">Pendentes</option>
+              <option value="posted">Postados</option>
+              <option value="failed">Falharam</option>
+              <option value="skipped">Pulados</option>
+            </select>
+            <button class="btn-success btn-small" onclick="postNow()">📤 Postar Agora</button>
+          </div>
+        </div>
+        <div class="product-list" id="products-list">
+          <div class="empty">Carregando...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Discover Panel -->
+    <div class="panel" id="panel-discover">
+      <div class="card">
+        <h3>Tendências do Mercado Livre</h3>
+        <div id="trends-list" style="display:flex;flex-wrap:wrap;gap:8px">
+          <div class="empty" style="width:100%">Carregando tendências...</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Descobrir por Categoria</h3>
+        <div class="input-row">
+          <select id="category-select" style="flex:2">
+            <option value="">Selecione uma categoria...</option>
+          </select>
+          <button class="btn-primary" onclick="discoverCategory()">Explorar</button>
+        </div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h3 style="margin:0" id="discover-title">Produtos em Destaque</h3>
+        </div>
+        <div class="product-list" id="discover-results">
+          <div class="empty">Selecione uma categoria acima para ver produtos em destaque</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedules Panel -->
+    <div class="panel" id="panel-schedules">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h3 style="margin:0">Postagem Automatica</h3>
+          <div id="posting-status-badge"></div>
+        </div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:20px">
+          Defina o intervalo entre um post e outro. O bot pega o proximo produto da fila e envia para todos os grupos ativos.
+        </p>
+
+        <div style="display:flex;align-items:center;gap:16px;padding:20px;background:var(--surface2);border-radius:12px;margin-bottom:20px">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+            <input type="checkbox" id="posting-enabled" onchange="savePostingConfig()" style="width:20px;height:20px;flex:none;accent-color:var(--accent)">
+            <span style="font-weight:600;font-size:15px" id="posting-enabled-label">Desativado</span>
+          </label>
+        </div>
+
+        <div style="margin-bottom:20px">
+          <label style="display:block;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px">Postar a cada:</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap" id="interval-buttons"></div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+          <label style="font-size:13px;color:var(--text2);white-space:nowrap">Ou valor personalizado:</label>
+          <input type="number" id="posting-interval-custom" min="1" max="1440" placeholder="Minutos" style="max-width:120px" onchange="setCustomInterval()">
+          <span style="font-size:13px;color:var(--text2)">minutos</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Como funciona a fila</h3>
+        <div style="font-size:13px;color:var(--text2);line-height:1.7">
+          <p><strong style="color:var(--text)">1.</strong> Produtos manuais tem prioridade sobre automaticos</p>
+          <p><strong style="color:var(--text)">2.</strong> Dentro de cada grupo, segue a ordem de chegada (mais antigo primeiro)</p>
+          <p><strong style="color:var(--text)">3.</strong> Use os botoes ⬆️ e ⬇️ na lista de produtos para mover um produto para o topo ou fundo da fila</p>
+          <p><strong style="color:var(--text)">4.</strong> Se a fila esvaziar, o bot busca ofertas automaticamente (se configurado na aba Auto Discovery)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Groups Panel -->
+    <div class="panel" id="panel-groups">
+      <!-- Telegram Section -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h3 style="margin:0">📱 Telegram</h3>
+          <div id="tg-conn-badge"></div>
+        </div>
+        <div id="tg-status" style="margin-bottom:16px"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-weight:600;font-size:14px">Grupos detectados</span>
+          <button class="btn-primary btn-small" onclick="detectGroups('telegram')">Atualizar</button>
+        </div>
+        <div id="telegram-available" class="product-list">
+          <div class="empty">Clique em "Atualizar" para detectar grupos</div>
+        </div>
+      </div>
+
+      <!-- WhatsApp Section -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h3 style="margin:0">💬 WhatsApp</h3>
+          <div id="wa-conn-badge"></div>
+        </div>
+        <div id="wa-status" style="margin-bottom:16px"></div>
+        <div id="wa-groups-section" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <span style="font-weight:600;font-size:14px">Grupos detectados</span>
+            <button class="btn-primary btn-small" onclick="detectGroups('whatsapp')">Atualizar</button>
+          </div>
+          <div id="whatsapp-available" class="product-list">
+            <div class="empty">Clique em "Atualizar" para detectar grupos</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manual Add -->
+      <div class="card">
+        <h3>Adicionar Manualmente</h3>
+        <div class="input-row">
+          <select id="group-platform" style="max-width:160px">
+            <option value="telegram">Telegram</option>
+            <option value="whatsapp">WhatsApp</option>
+          </select>
+          <input type="text" id="group-id" placeholder="ID do grupo (ex: -1001234567890)">
+          <input type="text" id="group-name" placeholder="Nome do grupo">
+          <button class="btn-primary" onclick="addGroup()">Adicionar</button>
+        </div>
+      </div>
+
+      <!-- Registered Groups -->
+      <div class="card">
+        <h3>Grupos Registrados</h3>
+        <table>
+          <thead><tr><th>Plataforma</th><th>Nome</th><th>ID</th><th>Status</th><th></th></tr></thead>
+          <tbody id="groups-table"><tr><td colspan="5" class="empty">Carregando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+    <!-- Auto Discovery Panel -->
+    <div class="panel" id="panel-autodiscovery">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h3 style="margin:0">Busca Automática de Ofertas</h3>
+          <div id="ad-status-badge"></div>
+        </div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:20px">
+          O sistema rotaciona automaticamente pelas categorias selecionadas, analisa os produtos em destaque,
+          filtra pelos seus critérios e adiciona os melhores à fila de postagem.
+        </p>
+
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:16px;background:var(--surface2);border-radius:10px">
+          <label style="font-weight:600;font-size:14px;white-space:nowrap">Motor de busca:</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="ad-enabled" onchange="saveAutoDiscovery()" style="width:auto;flex:none;accent-color:var(--accent)">
+            <span id="ad-enabled-label" style="font-size:14px">Desativado</span>
+          </label>
+          <button class="btn-primary btn-small" onclick="runDiscoveryNow()" style="margin-left:auto">Executar Agora</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+          <div>
+            <label style="display:block;font-size:12px;color:var(--text2);margin-bottom:6px">Intervalo (minutos)</label>
+            <input type="number" id="ad-interval" value="60" min="15" max="1440" onchange="saveAutoDiscovery()">
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;color:var(--text2);margin-bottom:6px">Desconto mínimo (%)</label>
+            <input type="number" id="ad-min-discount" value="10" min="0" max="90" onchange="saveAutoDiscovery()">
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;color:var(--text2);margin-bottom:6px">Preço máximo (R$)</label>
+            <input type="number" id="ad-max-price" value="" min="0" step="50" placeholder="Sem limite" onchange="saveAutoDiscovery()">
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;color:var(--text2);margin-bottom:6px">Produtos por execução</label>
+            <input type="number" id="ad-max-products" value="10" min="1" max="50" onchange="saveAutoDiscovery()">
+          </div>
+        </div>
+
+        <div style="margin-bottom:20px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px">
+            <input type="checkbox" id="ad-free-shipping" onchange="saveAutoDiscovery()" style="width:auto;flex:none;accent-color:var(--accent)">
+            Somente frete grátis
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Categorias Monitoradas</h3>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px">
+          Selecione as categorias para o sistema buscar automaticamente. Se nenhuma for selecionada, usa as 10 categorias mais populares.
+        </p>
+        <div id="ad-categories" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+          <div class="empty" style="width:100%">Carregando categorias...</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Sobre Preços e Cupons</h3>
+        <div style="font-size:13px;color:var(--text2);line-height:1.7">
+          <p><strong style="color:var(--text)">Preços:</strong> Os valores exibidos são os preços reais da API do Mercado Livre, incluindo preço original e com desconto quando disponíveis.</p>
+          <p style="margin-top:8px"><strong style="color:var(--text)">Cupons:</strong> O Mercado Livre não disponibiliza cupons via API — eles são aplicados automaticamente no checkout. As postagens incluem uma nota orientando os compradores a verificar se há cupom disponível na página do produto.</p>
+          <p style="margin-top:8px"><strong style="color:var(--text)">Frete grátis:</strong> Identificado corretamente pela API e destacado nas postagens quando disponível.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- AI Panel -->
+    <div class="panel" id="panel-ai">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <h3 style="margin:0">🤖 Provedor de IA</h3>
+          <div id="ai-active-badge"></div>
+        </div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:20px">
+          Escolha qual IA gera os títulos chamativos dos posts. Configure a chave de API do provedor desejado e selecione o modelo.
+        </p>
+
+        <!-- Provider selector -->
+        <div style="display:flex;gap:10px;margin-bottom:24px" id="provider-buttons">
+          <button id="btn-provider-anthropic" class="btn-outline" onclick="selectProvider('anthropic')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 10px">
+            <span style="font-size:22px">🧠</span>
+            <span style="font-size:13px;font-weight:700">Claude</span>
+            <span style="font-size:11px;opacity:0.8">Anthropic</span>
+          </button>
+          <button id="btn-provider-openai" class="btn-outline" onclick="selectProvider('openai')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 10px">
+            <span style="font-size:22px">✨</span>
+            <span style="font-size:13px;font-weight:700">GPT</span>
+            <span style="font-size:11px;opacity:0.8">OpenAI</span>
+          </button>
+          <button id="btn-provider-gemini" class="btn-outline" onclick="selectProvider('gemini')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 10px">
+            <span style="font-size:22px">💎</span>
+            <span style="font-size:13px;font-weight:700">Gemini</span>
+            <span style="font-size:11px;opacity:0.8">Google</span>
+          </button>
+        </div>
+
+        <!-- Anthropic section -->
+        <div id="ai-section-anthropic" style="display:none">
+          <div style="margin-bottom:14px">
+            <label style="display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Chave API Anthropic</label>
+            <div style="display:flex;gap:8px">
+              <input type="password" id="ai-anthropic-key" placeholder="sk-ant-..." autocomplete="off" style="flex:1">
+              <button class="btn-outline btn-small" onclick="toggleKeyVisibility('ai-anthropic-key', this)">👁️</button>
+            </div>
+            <div style="font-size:11px;color:var(--text2);margin-top:4px">Obtenha em <a href="https://console.anthropic.com" target="_blank" style="color:var(--accent2)">console.anthropic.com</a></div>
+          </div>
+          <div style="margin-bottom:14px">
+            <label style="display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Modelo</label>
+            <select id="ai-anthropic-model" style="width:100%">
+              <option value="claude-haiku-4-5">claude-haiku-4-5 (mais rápido e barato ✅)</option>
+              <option value="claude-sonnet-4-5">claude-sonnet-4-5 (equilibrado)</option>
+              <option value="claude-opus-4-5">claude-opus-4-5 (mais poderoso)</option>
+              <option value="claude-opus-5-5">claude-opus-5-5</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- OpenAI section -->
+        <div id="ai-section-openai" style="display:none">
+          <div style="margin-bottom:14px">
+            <label style="display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Chave API OpenAI</label>
+            <div style="display:flex;gap:8px">
+              <input type="password" id="ai-openai-key" placeholder="sk-..." autocomplete="off" style="flex:1">
+              <button class="btn-outline btn-small" onclick="toggleKeyVisibility('ai-openai-key', this)">👁️</button>
+            </div>
+            <div style="font-size:11px;color:var(--text2);margin-top:4px">Obtenha em <a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--accent2)">platform.openai.com/api-keys</a></div>
+          </div>
+          <div style="margin-bottom:14px">
+            <label style="display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Modelo</label>
+            <select id="ai-openai-model" style="width:100%">
+              <option value="gpt-4o-mini">gpt-4o-mini (barato e rápido ✅)</option>
+              <option value="gpt-4o">gpt-4o (mais poderoso)</option>
+              <option value="gpt-4.1-mini">gpt-4.1-mini</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Gemini section -->
+        <div id="ai-section-gemini" style="display:none">
+          <div style="margin-bottom:14px">
+            <label style="display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Chave API Gemini</label>
+            <div style="display:flex;gap:8px">
+              <input type="password" id="ai-gemini-key" placeholder="AIza..." autocomplete="off" style="flex:1">
+              <button class="btn-outline btn-small" onclick="toggleKeyVisibility('ai-gemini-key', this)">👁️</button>
+            </div>
+            <div style="font-size:11px;color:var(--text2);margin-top:4px">Obtenha em <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent2)">aistudio.google.com</a></div>
+          </div>
+          <div style="margin-bottom:14px">
+            <label style="display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Modelo</label>
+            <select id="ai-gemini-model" style="width:100%">
+              <option value="gemini-flash-latest">gemini-flash-latest (recomendado / mais recente ✅)</option>
+              <option value="gemini-3.5-flash">gemini-3.5-flash (rápido e econômico)</option>
+              <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (ultra leve)</option>
+              <option value="gemini-3.8-flash">gemini-3.8-flash (alta precisão)</option>
+              <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:8px">
+          <button class="btn-primary" onclick="saveAIConfig()" style="flex:1">💾 Salvar Configuração</button>
+          <button class="btn-outline" onclick="testAIConfig()" id="ai-test-btn">🧪 Testar</button>
+        </div>
+        <div id="ai-test-result" style="margin-top:12px;font-size:13px;display:none"></div>
+      </div>
+
+      <div class="card">
+        <h3>Como funciona</h3>
+        <div style="font-size:13px;color:var(--text2);line-height:1.7">
+          <p><strong style="color:var(--text)">1.</strong> A IA gera um título chamativo curto (ex: "Para usar na pelada de sábado") baseado no nome do produto.</p>
+          <p><strong style="color:var(--text)">2.</strong> Esse título aparece em destaque no post enviado para os grupos.</p>
+          <p><strong style="color:var(--text)">3.</strong> Se nenhuma chave for configurada, o bot usa o próprio nome do produto como título.</p>
+          <p style="margin-top:8px"><strong style="color:var(--text)">Custo estimado:</strong> ~0,001 centavos por produto com modelos baratos (gpt-4o-mini, gemini-flash, claude-haiku).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="edit-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <img id="modal-img" src="" alt="">
+        <div class="modal-header-text">
+          <h4 id="modal-title"></h4>
+          <span id="modal-price"></span>
+        </div>
+        <button class="modal-close" onclick="closeEditModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label for="modal-headline">Titulo chamativo</label>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="modal-headline" placeholder="Ex: O Messi que indicou" style="flex:1">
+          <button class="btn-outline" id="modal-ai-btn" onclick="generateHeadlineAI()" title="Gerar com IA">🪄 IA</button>
+        </div>
+        <div class="hint">Frase esperta relacionada ao produto. Clique em "🪄 IA" para gerar automaticamente.</div>
+
+        <label for="modal-coupon">Cupom</label>
+        <input type="text" id="modal-coupon" placeholder="Ex: ESQUENTA15">
+        <div class="hint">Aparece como aviso no post. Deixe vazio se nao tiver cupom.</div>
+
+        <label>Preview do post</label>
+        <div class="modal-preview" id="modal-preview"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline" onclick="closeEditModal()">Cancelar</button>
+        <button class="btn-primary" onclick="saveEditModal()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // Tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Toast
+    function showToast(msg, error = false) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.className = 'toast show' + (error ? ' error' : '');
+      setTimeout(() => toast.className = 'toast', 3000);
+    }
+
+    // API helper
+    async function api(path, options = {}) {
+      const res = await fetch('/api' + path, {
+        headers: { 'Content-Type': 'application/json' },
+        ...options,
+        body: options.body ? JSON.stringify(options.body) : undefined,
+      });
+      return res.json();
+    }
+
+    // Load status
+    async function loadStatus() {
+      try {
+        const data = await api('/status');
+        document.getElementById('stat-pending').textContent = data.pending;
+        document.getElementById('stat-posted').textContent = data.posted;
+        document.getElementById('stat-groups').textContent = data.activeGroups;
+        document.getElementById('stat-scheduler').textContent = data.schedulerActive ? 'ON' : 'OFF';
+
+        const tg = data.messengers.find(m => m.platform === 'telegram');
+        const dot = document.querySelector('.status-dot');
+        const label = dot.nextElementSibling;
+        if (tg && tg.connected) {
+          dot.className = 'status-dot online';
+          label.textContent = 'Bot online';
+        } else {
+          dot.className = 'status-dot offline';
+          label.textContent = 'Bot offline';
+        }
+      } catch {
+        document.querySelector('.status-dot').className = 'status-dot offline';
+        document.querySelector('.status-dot').nextElementSibling.textContent = 'Sem conexão';
+      }
+    }
+
+    // Products
+    async function loadProducts() {
+      const status = document.getElementById('filter-status').value;
+      const products = await api('/products?status=' + status + '&limit=50');
+      const list = document.getElementById('products-list');
+
+      if (!products.length) {
+        list.innerHTML = '<div class="empty">Nenhum produto ' + status + '</div>';
+        return;
+      }
+
+      list.innerHTML = products.map((p, idx) => `
+        <div class="product-item" style="flex-wrap:wrap">
+          ${status === 'pending' ? '<div style="font-size:11px;font-weight:800;color:var(--text2);min-width:24px;text-align:center">#' + (idx + 1) + '</div>' : ''}
+          <img src="${p.imageUrl}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22><rect fill=%22%23242836%22 width=%2264%22 height=%2264%22/><text fill=%22%238b8fa3%22 x=%2232%22 y=%2236%22 text-anchor=%22middle%22 font-size=%2212%22>IMG</text></svg>'">
+          <div class="product-info">
+            ${p.headline ? '<div style="font-size:11px;font-weight:700;color:var(--accent2);text-transform:uppercase;margin-bottom:2px">' + esc(p.headline) + '</div>' : ''}
+            <div class="title">${esc(p.title)}</div>
+            <div class="meta">
+              ${p.source === 'manual' ? '✋ Manual' : '🤖 Auto'}
+              ${p.freeShipping ? ' · 🚛 Frete grátis' : ''}
+              ${p.couponCode ? ' · 🎟️ ' + esc(p.couponCode) : ''}
+            </div>
+            <div class="price">
+              ${p.originalPrice ? '<span class="old-price">R$ ' + fmt(p.originalPrice) + '</span>' : ''}
+              R$ ${fmt(p.price)}
+              ${p.discountPercent ? '<span class="discount">-' + p.discountPercent + '%</span>' : ''}
+            </div>
+          </div>
+          <div style="display:flex;gap:4px;align-items:center;flex-shrink:0">
+            ${status === 'pending' ? '<button class="btn-outline btn-small" onclick="moveTop(' + p.id + ')" title="Mover para o topo">⬆️</button>' : ''}
+            ${status === 'pending' ? '<button class="btn-outline btn-small" onclick="moveBottom(' + p.id + ')" title="Mover para o fundo">⬇️</button>' : ''}
+            ${status === 'pending' ? `<button class="btn-outline btn-small" onclick='editProduct(${JSON.stringify(p).replace(/'/g, "&#39;")})' title="Editar">✏️</button>` : ''}
+            ${status === 'pending' ? '<button class="btn-outline btn-small" onclick="skipProduct(' + p.id + ')" title="Pular">Pular</button>' : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function addProduct() {
+      const input = document.getElementById('add-url');
+      const url = input.value.trim();
+      if (!url) return;
+
+      const headline = document.getElementById('add-headline').value.trim();
+      const couponCode = document.getElementById('add-coupon').value.trim();
+
+      input.disabled = true;
+      try {
+        const res = await api('/products/add', { method: 'POST', body: { url, headline, couponCode } });
+        if (res.error) throw new Error(res.error);
+        showToast('Produto adicionado à fila!');
+        input.value = '';
+        document.getElementById('add-headline').value = '';
+        document.getElementById('add-coupon').value = '';
+        loadProducts();
+        loadStatus();
+      } catch (e) {
+        showToast(e.message, true);
+      }
+      input.disabled = false;
+    }
+
+    let editingProduct = null;
+
+    function editProduct(product) {
+      editingProduct = product;
+      document.getElementById('modal-img').src = product.imageUrl;
+      document.getElementById('modal-title').textContent = product.title;
+      const priceText = product.originalPrice
+        ? `De R$ ${fmt(product.originalPrice)} por R$ ${fmt(product.price)}${product.discountPercent ? ' (-' + product.discountPercent + '%)' : ''}`
+        : `R$ ${fmt(product.price)}`;
+      document.getElementById('modal-price').textContent = priceText + (product.freeShipping ? ' · Frete grátis' : '');
+      document.getElementById('modal-headline').value = product.headline || '';
+      document.getElementById('modal-coupon').value = product.couponCode || '';
+      updatePreview();
+      document.getElementById('edit-modal').classList.add('open');
+      document.getElementById('modal-headline').focus();
+    }
+
+    function closeEditModal() {
+      document.getElementById('edit-modal').classList.remove('open');
+      editingProduct = null;
+    }
+
+    async function generateHeadlineAI() {
+      if (!editingProduct) return;
+      const btn = document.getElementById('modal-ai-btn');
+      btn.disabled = true;
+      btn.textContent = '⏳...';
+      try {
+        const res = await api('/products/' + editingProduct.id + '/generate-headline', { method: 'POST' });
+        if (res.error) throw new Error(res.error);
+        document.getElementById('modal-headline').value = res.headline;
+        updatePreview();
+      } catch (err) {
+        alert('Erro ao gerar com IA: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🪄 IA';
+      }
+    }
+
+    function updatePreview() {
+      if (!editingProduct) return;
+      const p = editingProduct;
+      const h = document.getElementById('modal-headline').value.trim();
+      const c = document.getElementById('modal-coupon').value.trim();
+
+      const headline = h || p.title.split(' ').slice(0, 6).join(' ');
+      const lines = [];
+      lines.push('<span class="preview-headline">' + esc(headline.toUpperCase()) + '</span>');
+      lines.push('');
+      lines.push(esc(p.title));
+      lines.push('');
+      if (p.originalPrice && p.originalPrice > p.price) {
+        lines.push('<span class="preview-price">De: ' + fmt(p.originalPrice) + ' | Por: R$' + fmt(p.price) + ' 👑</span>');
+      } else {
+        lines.push('<span class="preview-price">Por: R$' + fmt(p.price) + ' 👑</span>');
+      }
+      if (c) {
+        lines.push('<span class="preview-coupon">⚠️ cupom: ' + esc(c) + '</span>');
+      }
+      lines.push('');
+      lines.push('<span class="preview-link">Link: mercadolivre.com.br/...</span>');
+      if (p.freeShipping) {
+        lines.push('');
+        lines.push('<span class="preview-shipping">🚛 frete grátis fazendo login</span>');
+      }
+
+      document.getElementById('modal-preview').innerHTML = lines.join('\n');
+    }
+
+    document.getElementById('modal-headline').addEventListener('input', updatePreview);
+    document.getElementById('modal-coupon').addEventListener('input', updatePreview);
+
+    document.getElementById('edit-modal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('edit-modal')) closeEditModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeEditModal();
+    });
+
+    async function saveEditModal() {
+      if (!editingProduct) return;
+      const headline = document.getElementById('modal-headline').value.trim() || null;
+      const couponCode = document.getElementById('modal-coupon').value.trim() || null;
+
+      await api('/products/' + editingProduct.id, { method: 'PATCH', body: { headline, couponCode } });
+      showToast('Produto atualizado!');
+      closeEditModal();
+      loadProducts();
+    }
+
+    async function skipProduct(id) {
+      await api('/products/skip/' + id, { method: 'POST' });
+      showToast('Produto pulado');
+      loadProducts();
+      loadStatus();
+    }
+
+    async function postNow() {
+      showToast('Postando...');
+      const res = await api('/post', { method: 'POST' });
+      if (res.success) {
+        showToast('Produto postado!');
+      } else {
+        showToast(res.error || 'Nenhum produto para postar', true);
+      }
+      loadProducts();
+      loadStatus();
+    }
+
+    // Discover
+    async function loadTrends() {
+      try {
+        const trends = await api('/trends');
+        const list = document.getElementById('trends-list');
+        if (trends.error) throw new Error(trends.error);
+        list.innerHTML = trends.slice(0, 30).map(t =>
+          `<button class="btn-outline btn-small" onclick="copyTrend('${esc(t.keyword)}')" style="font-size:13px">${esc(t.keyword)}</button>`
+        ).join('');
+      } catch {
+        document.getElementById('trends-list').innerHTML = '<div class="empty" style="width:100%">Não foi possível carregar tendências</div>';
+      }
+    }
+
+    function copyTrend(keyword) {
+      const urlInput = document.getElementById('add-url');
+      showToast('Dica: busque "' + keyword + '" no Mercado Livre e cole a URL do produto aqui');
+      document.querySelector('.tab[data-tab="products"]').click();
+      urlInput.focus();
+      urlInput.placeholder = 'Cole a URL de "' + keyword + '" aqui...';
+    }
+
+    async function loadCategories() {
+      try {
+        const cats = await api('/categories');
+        const sel = document.getElementById('category-select');
+        if (cats.error) return;
+        cats.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.id;
+          opt.textContent = c.name;
+          sel.appendChild(opt);
+        });
+      } catch {}
+    }
+
+    async function discoverCategory() {
+      const sel = document.getElementById('category-select');
+      const catId = sel.value;
+      if (!catId) return;
+
+      const catName = sel.options[sel.selectedIndex].text;
+      const list = document.getElementById('discover-results');
+      document.getElementById('discover-title').textContent = 'Destaques: ' + catName;
+      list.innerHTML = '<div class="empty">Buscando destaques...</div>';
+
+      try {
+        const products = await api('/discover/' + catId);
+        if (products.error) throw new Error(products.error);
+        if (!products.length) {
+          list.innerHTML = '<div class="empty">Nenhum destaque encontrado para esta categoria</div>';
+          return;
+        }
+
+        list.innerHTML = products.map(p => {
+          const discount = p.originalPrice && p.originalPrice > p.price
+            ? Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100) : 0;
+          return `
+            <div class="product-item">
+              <img src="${p.imageUrl}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22><rect fill=%22%23242836%22 width=%2264%22 height=%2264%22/><text fill=%22%238b8fa3%22 x=%2232%22 y=%2236%22 text-anchor=%22middle%22 font-size=%2212%22>IMG</text></svg>'">
+              <div class="product-info">
+                <div class="title">${esc(p.title)}</div>
+                <div class="meta">${p.freeShipping ? '🚚 Frete grátis · ' : ''}${p.category}</div>
+                <div class="price">
+                  ${p.originalPrice ? '<span class="old-price">R$ ' + fmt(p.originalPrice) + '</span>' : ''}
+                  R$ ${fmt(p.price)}
+                  ${discount ? '<span class="discount">-' + discount + '%</span>' : ''}
+                </div>
+              </div>
+              <button class="btn-success btn-small" onclick="addFromDiscover('${esc(p.productUrl)}')">+ Fila</button>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        list.innerHTML = '<div class="empty" style="color:var(--red)">' + e.message + '</div>';
+      }
+    }
+
+    async function addFromDiscover(url) {
+      try {
+        const res = await api('/products/add', { method: 'POST', body: { url } });
+        if (res.error) throw new Error(res.error);
+        showToast('Adicionado à fila!');
+        loadStatus();
+      } catch (e) {
+        showToast(e.message, true);
+      }
+    }
+
+    // Schedules
+    // Posting config
+    const INTERVAL_PRESETS = [
+      { label: '1 min', value: 1 },
+      { label: '5 min', value: 5 },
+      { label: '15 min', value: 15 },
+      { label: '30 min', value: 30 },
+      { label: '1 hora', value: 60 },
+      { label: '2 horas', value: 120 },
+      { label: '6 horas', value: 360 },
+      { label: '12 horas', value: 720 },
+    ];
+
+    let currentInterval = 30;
+
+    async function loadPostingConfig() {
+      try {
+        const data = await api('/posting-config');
+        document.getElementById('posting-enabled').checked = data.enabled;
+        document.getElementById('posting-enabled-label').textContent = data.enabled ? 'Ativado' : 'Desativado';
+        currentInterval = data.intervalMinutes;
+        document.getElementById('posting-interval-custom').value = '';
+
+        const badge = document.getElementById('posting-status-badge');
+        if (data.running) {
+          badge.innerHTML = '<span class="badge badge-green">Rodando — a cada ' + formatInterval(data.intervalMinutes) + '</span>';
+        } else {
+          badge.innerHTML = '<span class="badge badge-red">Parado</span>';
+        }
+
+        renderIntervalButtons();
+      } catch {}
+    }
+
+    function formatInterval(mins) {
+      if (mins < 60) return mins + ' min';
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      return h + 'h' + (m > 0 ? m + 'min' : '');
+    }
+
+    function renderIntervalButtons() {
+      const container = document.getElementById('interval-buttons');
+      container.innerHTML = INTERVAL_PRESETS.map(p => {
+        const active = p.value === currentInterval;
+        return `<button class="${active ? 'btn-primary' : 'btn-outline'} btn-small" onclick="setPostInterval(${p.value})" style="font-size:13px">${p.label}</button>`;
+      }).join('');
+
+      const isPreset = INTERVAL_PRESETS.some(p => p.value === currentInterval);
+      if (!isPreset) {
+        document.getElementById('posting-interval-custom').value = currentInterval;
+      }
+    }
+
+    async function setPostInterval(mins) {
+      currentInterval = mins;
+      document.getElementById('posting-interval-custom').value = '';
+      renderIntervalButtons();
+      await savePostingConfig();
+    }
+
+    async function setCustomInterval() {
+      const val = Number(document.getElementById('posting-interval-custom').value);
+      if (!val || val < 1) return;
+      currentInterval = val;
+      renderIntervalButtons();
+      await savePostingConfig();
+    }
+
+    async function savePostingConfig() {
+      const enabled = document.getElementById('posting-enabled').checked;
+      document.getElementById('posting-enabled-label').textContent = enabled ? 'Ativado' : 'Desativado';
+
+      try {
+        await api('/posting-config', { method: 'PUT', body: { enabled, intervalMinutes: currentInterval } });
+        showToast(enabled ? 'Postagem ativada — a cada ' + formatInterval(currentInterval) : 'Postagem desativada');
+        loadPostingConfig();
+        loadStatus();
+      } catch (e) {
+        showToast('Erro ao salvar', true);
+      }
+    }
+
+    // Product reorder
+    async function moveTop(id) {
+      await api('/products/move-top/' + id, { method: 'POST' });
+      loadProducts();
+    }
+
+    async function moveBottom(id) {
+      await api('/products/move-bottom/' + id, { method: 'POST' });
+      loadProducts();
+    }
+
+    // Messenger Status Management
+    let pollInterval = null;
+
+    async function checkMessengersStatus() {
+      await checkTelegramStatus();
+      await checkWhatsAppStatus();
+    }
+
+    async function checkTelegramStatus() {
+      const badge = document.getElementById('tg-conn-badge');
+      const statusDiv = document.getElementById('tg-status');
+      try {
+        const data = await api('/messengers/qr/telegram');
+        if (data.connected) {
+          badge.innerHTML = '<span class="badge badge-green">Conectado</span>';
+          statusDiv.innerHTML = `
+            <div style="padding:12px;background:rgba(0,184,148,0.1);border:1px solid var(--green);border-radius:8px;font-size:13px">
+              <span class="status-dot online"></span> Bot conectado.
+              <span style="color:var(--text2)">Adicione o bot a um grupo no Telegram e envie qualquer mensagem. Depois clique "Atualizar" abaixo.</span>
+            </div>`;
+        } else {
+          badge.innerHTML = '<span class="badge badge-red">Offline</span>';
+          statusDiv.innerHTML = `<div style="padding:12px;background:var(--surface2);border-radius:8px;font-size:13px;color:var(--text2)">Bot offline. Verifique o token no .env.</div>`;
+        }
+      } catch {
+        badge.innerHTML = '<span class="badge badge-red">Erro</span>';
+      }
+    }
+
+    async function checkWhatsAppStatus() {
+      const badge = document.getElementById('wa-conn-badge');
+      const statusDiv = document.getElementById('wa-status');
+      const waGroupsSection = document.getElementById('wa-groups-section');
+
+      try {
+        const wa = await api('/messengers/qr/whatsapp');
+
+        if (wa.connected) {
+          badge.innerHTML = '<span class="badge badge-green">Conectado</span>';
+          statusDiv.innerHTML = `
+            <div style="padding:12px;background:rgba(0,184,148,0.1);border:1px solid var(--green);border-radius:8px;display:flex;justify-content:space-between;align-items:center">
+              <span><span class="status-dot online"></span> <span style="font-weight:600;color:var(--green)">WhatsApp conectado!</span></span>
+              <button class="btn-danger btn-small" onclick="disconnectWA()">Desconectar</button>
+            </div>`;
+          waGroupsSection.style.display = 'block';
+          stopPolling();
+        } else if (wa.initialized && wa.qr) {
+          badge.innerHTML = '<span class="badge badge-yellow">Aguardando scan</span>';
+          statusDiv.innerHTML = `
+            <div style="text-align:center;padding:20px;background:var(--surface2);border-radius:8px">
+              <p style="font-weight:600;margin-bottom:12px;color:var(--yellow)">Escaneie o QR Code com seu WhatsApp</p>
+              <div style="background:white;display:inline-block;padding:16px;border-radius:12px">
+                <img id="qr-img" style="width:256px;height:256px" alt="QR Code">
+              </div>
+              <p style="font-size:12px;color:var(--text2);margin-top:12px">WhatsApp > Menu > Aparelhos conectados > Conectar aparelho</p>
+            </div>`;
+          renderQR(wa.qr);
+          waGroupsSection.style.display = 'none';
+          startPolling();
+        } else if (wa.initialized) {
+          badge.innerHTML = '<span class="badge badge-yellow">Conectando...</span>';
+          statusDiv.innerHTML = `
+            <div style="padding:12px;background:var(--surface2);border-radius:8px;font-size:13px;color:var(--text2)">
+              <span class="status-dot offline"></span> Gerando QR code, aguarde...
+            </div>`;
+          waGroupsSection.style.display = 'none';
+          startPolling();
+        } else {
+          badge.innerHTML = '<span class="badge badge-red">Desconectado</span>';
+          statusDiv.innerHTML = `
+            <div style="padding:16px;background:var(--surface2);border-radius:8px;text-align:center">
+              <p style="color:var(--text2);margin-bottom:12px;font-size:13px">WhatsApp não conectado. Clique para iniciar a conexão.</p>
+              <button class="btn-success" onclick="connectWA()">Conectar WhatsApp</button>
+            </div>`;
+          waGroupsSection.style.display = 'none';
+          stopPolling();
+        }
+      } catch {
+        badge.innerHTML = '<span class="badge badge-red">Erro</span>';
+        statusDiv.innerHTML = '<div class="empty">Erro ao verificar status</div>';
+      }
+    }
+
+    function startPolling() {
+      if (!pollInterval) pollInterval = setInterval(checkWhatsAppStatus, 4000);
+    }
+    function stopPolling() {
+      if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+    }
+
+    async function connectWA() {
+      showToast('Iniciando conexão WhatsApp...');
+      await api('/messengers/connect/whatsapp', { method: 'POST' });
+      setTimeout(checkWhatsAppStatus, 2000);
+    }
+
+    async function disconnectWA() {
+      if (!confirm('Desconectar WhatsApp?')) return;
+      await api('/messengers/disconnect/whatsapp', { method: 'POST' });
+      showToast('WhatsApp desconectado');
+      checkWhatsAppStatus();
+    }
+
+    function renderQR(qrText) {
+      const img = document.getElementById('qr-img');
+      if (!img) return;
+      img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=' + encodeURIComponent(qrText);
+    }
+
+    // Detect groups
+    async function detectGroups(platform) {
+      const listId = platform + '-available';
+      const list = document.getElementById(listId);
+      if (!list) return;
+      list.innerHTML = '<div class="empty">Buscando grupos...</div>';
+
+      try {
+        const groups = await api('/messengers/groups/' + platform);
+        const registered = await api('/groups');
+        const registeredIds = new Set(registered.map(g => g.groupId));
+
+        if (!groups.length) {
+          const tip = platform === 'telegram'
+            ? 'Adicione o bot a um grupo no Telegram e envie qualquer mensagem lá. Depois volte e clique em "Detectar" novamente.'
+            : 'Certifique-se que o WhatsApp está conectado e que você participa de grupos.';
+          list.innerHTML = `<div class="empty">Nenhum grupo detectado.<br><span style="font-size:12px">${tip}</span></div>`;
+          return;
+        }
+
+        list.innerHTML = groups.map(g => {
+          const already = registeredIds.has(g.id);
+          const icon = platform === 'telegram' ? '📱' : '💬';
+          return `
+            <div class="product-item">
+              <div style="font-size:28px;width:48px;text-align:center">${icon}</div>
+              <div class="product-info">
+                <div class="title">${esc(g.name)}</div>
+                <div class="meta">ID: ${g.id}</div>
+              </div>
+              ${already
+                ? '<span class="badge badge-green">Registrado</span>'
+                : `<button class="btn-success btn-small" onclick="registerDetected('${platform}','${g.id}','${esc(g.name)}')">Registrar</button>`
+              }
+            </div>`;
+        }).join('');
+      } catch (e) {
+        list.innerHTML = '<div class="empty" style="color:var(--red)">Erro ao detectar grupos</div>';
+      }
+    }
+
+    async function registerDetected(platform, groupId, groupName) {
+      const res = await api('/groups', { method: 'POST', body: { platform, groupId, groupName } });
+      if (res.error) { showToast(res.error, true); return; }
+      showToast('Grupo registrado!');
+      detectGroups(platform);
+      loadGroups();
+      loadStatus();
+    }
+
+    // Groups
+    async function loadGroups() {
+      const groups = await api('/groups');
+      const tbody = document.getElementById('groups-table');
+
+      if (!groups.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty">Nenhum grupo</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = groups.map(g => `
+        <tr>
+          <td>${g.platform === 'telegram' ? '📱 Telegram' : '💬 WhatsApp'}</td>
+          <td>${esc(g.groupName)}</td>
+          <td><code style="font-size:12px">${g.groupId}</code></td>
+          <td><span class="badge ${g.enabled ? 'badge-green' : 'badge-red'}">${g.enabled ? 'Ativo' : 'Inativo'}</span></td>
+          <td style="text-align:right">
+            <button class="btn-outline btn-small" onclick="toggleGrp(${g.id}, ${!g.enabled})">${g.enabled ? 'Desativar' : 'Ativar'}</button>
+            <button class="btn-danger btn-small" onclick="deleteGrp('${g.platform}','${g.groupId}')">Remover</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function addGroup() {
+      const platform = document.getElementById('group-platform').value;
+      const groupId = document.getElementById('group-id').value.trim();
+      const groupName = document.getElementById('group-name').value.trim();
+      if (!groupId) return;
+
+      const res = await api('/groups', { method: 'POST', body: { platform, groupId, groupName } });
+      if (res.error) { showToast(res.error, true); return; }
+      showToast('Grupo adicionado!');
+      document.getElementById('group-id').value = '';
+      document.getElementById('group-name').value = '';
+      loadGroups();
+      loadStatus();
+    }
+
+    async function toggleGrp(id, enabled) {
+      await api('/groups/' + id, { method: 'PATCH', body: { enabled } });
+      loadGroups();
+      loadStatus();
+    }
+
+    async function deleteGrp(platform, groupId) {
+      if (!confirm('Remover grupo?')) return;
+      await api('/groups/' + platform + '/' + groupId, { method: 'DELETE' });
+      showToast('Grupo removido');
+      loadGroups();
+      loadStatus();
+    }
+
+    // Auto Discovery
+    let adCategories = [];
+    let adSelectedCategories = new Set();
+
+    async function loadAutoDiscovery() {
+      try {
+        const data = await api('/auto-discovery');
+        document.getElementById('ad-enabled').checked = data.enabled;
+        document.getElementById('ad-enabled-label').textContent = data.enabled ? 'Ativado' : 'Desativado';
+        document.getElementById('ad-interval').value = data.intervalMinutes;
+        document.getElementById('ad-min-discount').value = data.minDiscount;
+        document.getElementById('ad-max-price').value = data.maxPrice || '';
+        document.getElementById('ad-max-products').value = data.maxProductsPerRun;
+        document.getElementById('ad-free-shipping').checked = data.freeShippingOnly;
+
+        adSelectedCategories = new Set(data.categories || []);
+
+        const badge = document.getElementById('ad-status-badge');
+        if (data.running) {
+          badge.innerHTML = '<span class="badge badge-green">Rodando</span>';
+        } else if (data.enabled) {
+          badge.innerHTML = '<span class="badge badge-yellow">Iniciando...</span>';
+        } else {
+          badge.innerHTML = '<span class="badge badge-red">Parado</span>';
+        }
+
+        renderAdCategories();
+      } catch {}
+    }
+
+    async function loadAdCategories() {
+      try {
+        const cats = await api('/categories');
+        adCategories = cats;
+        renderAdCategories();
+      } catch {}
+    }
+
+    function renderAdCategories() {
+      const container = document.getElementById('ad-categories');
+      if (!adCategories.length) {
+        container.innerHTML = '<div class="empty" style="width:100%">Nenhuma categoria disponível</div>';
+        return;
+      }
+      container.innerHTML = adCategories.map(c => {
+        const selected = adSelectedCategories.has(c.id);
+        return `<button class="${selected ? 'btn-primary' : 'btn-outline'} btn-small" onclick="toggleAdCategory('${c.id}')" style="font-size:13px">${esc(c.name)}</button>`;
+      }).join('');
+    }
+
+    function toggleAdCategory(catId) {
+      if (adSelectedCategories.has(catId)) {
+        adSelectedCategories.delete(catId);
+      } else {
+        adSelectedCategories.add(catId);
+      }
+      renderAdCategories();
+      saveAutoDiscovery();
+    }
+
+    let adSaveTimeout = null;
+    async function saveAutoDiscovery() {
+      clearTimeout(adSaveTimeout);
+      adSaveTimeout = setTimeout(async () => {
+        const enabled = document.getElementById('ad-enabled').checked;
+        document.getElementById('ad-enabled-label').textContent = enabled ? 'Ativado' : 'Desativado';
+
+        const maxPriceVal = document.getElementById('ad-max-price').value;
+        const body = {
+          enabled,
+          intervalMinutes: Number(document.getElementById('ad-interval').value) || 60,
+          minDiscount: Number(document.getElementById('ad-min-discount').value) || 0,
+          freeShippingOnly: document.getElementById('ad-free-shipping').checked,
+          maxPrice: maxPriceVal ? Number(maxPriceVal) : null,
+          maxProductsPerRun: Number(document.getElementById('ad-max-products').value) || 10,
+          categories: Array.from(adSelectedCategories),
+        };
+
+        try {
+          await api('/auto-discovery', { method: 'PUT', body });
+          showToast('Configuração salva!');
+          loadAutoDiscovery();
+        } catch (e) {
+          showToast('Erro ao salvar', true);
+        }
+      }, 500);
+    }
+
+    async function runDiscoveryNow() {
+      showToast('Executando busca...');
+      try {
+        const res = await api('/auto-discovery/run', { method: 'POST' });
+        if (res.error) throw new Error(res.error);
+        showToast(res.added + ' produtos adicionados à fila!');
+        loadStatus();
+        loadProducts();
+      } catch (e) {
+        showToast(e.message, true);
+      }
+    }
+
+    // Helpers
+    function fmt(n) { return Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+    // ───────────────────────── AI Config ─────────────────────────
+    let currentAIProvider = 'anthropic';
+
+    async function loadAIConfig() {
+      try {
+        const data = await api('/ai-config');
+        currentAIProvider = data.provider || 'anthropic';
+
+        // Set model dropdowns
+        setSelectValue('ai-anthropic-model', data.anthropicModel);
+        setSelectValue('ai-openai-model', data.openaiModel);
+        setSelectValue('ai-gemini-model', data.geminiModel);
+
+        // Show masked keys as placeholders
+        if (data.anthropicKeyMasked) document.getElementById('ai-anthropic-key').placeholder = data.anthropicKeyMasked;
+        if (data.openaiKeyMasked)    document.getElementById('ai-openai-key').placeholder    = data.openaiKeyMasked;
+        if (data.geminiKeyMasked)    document.getElementById('ai-gemini-key').placeholder    = data.geminiKeyMasked;
+
+        // Apply provider UI
+        applyProviderUI(currentAIProvider);
+
+        // Badge
+        const badge = document.getElementById('ai-active-badge');
+        const providerLabel = { anthropic: 'Claude', openai: 'GPT', gemini: 'Gemini' }[currentAIProvider] || currentAIProvider;
+        const keySet = data[currentAIProvider + 'KeySet'];
+        if (keySet) {
+          badge.innerHTML = `<span class="badge badge-green">Ativo: ${providerLabel}</span>`;
+        } else {
+          badge.innerHTML = `<span class="badge badge-yellow">Sem chave: ${providerLabel}</span>`;
+        }
+      } catch (e) {
+        console.error('Erro ao carregar config de IA', e);
+      }
+    }
+
+    function setSelectValue(id, value) {
+      const sel = document.getElementById(id);
+      if (!sel || !value) return;
+      for (const opt of sel.options) {
+        if (opt.value === value) { sel.value = value; return; }
+      }
+      // Value not in list — add it
+      const opt = document.createElement('option');
+      opt.value = value; opt.textContent = value;
+      sel.appendChild(opt);
+      sel.value = value;
+    }
+
+    function selectProvider(provider) {
+      currentAIProvider = provider;
+      applyProviderUI(provider);
+    }
+
+    function applyProviderUI(provider) {
+      ['anthropic', 'openai', 'gemini'].forEach(p => {
+        const btn = document.getElementById('btn-provider-' + p);
+        const sec = document.getElementById('ai-section-' + p);
+        if (p === provider) {
+          btn.className = 'btn-primary';
+          btn.style.cssText = btn.style.cssText; // keep
+          sec.style.display = 'block';
+        } else {
+          btn.className = 'btn-outline';
+          sec.style.display = 'none';
+        }
+        // Keep the flex layout
+        btn.style.flex = '1';
+        btn.style.display = 'flex';
+        btn.style.flexDirection = 'column';
+        btn.style.alignItems = 'center';
+        btn.style.gap = '6px';
+        btn.style.padding = '16px 10px';
+      });
+    }
+
+    async function saveAIConfig() {
+      const anthropicApiKey = document.getElementById('ai-anthropic-key').value.trim() || undefined;
+      const openaiApiKey    = document.getElementById('ai-openai-key').value.trim()    || undefined;
+      const geminiApiKey    = document.getElementById('ai-gemini-key').value.trim()    || undefined;
+
+      const body = {
+        provider: currentAIProvider,
+        anthropicModel: document.getElementById('ai-anthropic-model').value,
+        openaiModel:    document.getElementById('ai-openai-model').value,
+        geminiModel:    document.getElementById('ai-gemini-model').value,
+      };
+
+      // Only send keys if the user typed something (to avoid overwriting with empty)
+      if (anthropicApiKey) body.anthropicApiKey = anthropicApiKey;
+      if (openaiApiKey)    body.openaiApiKey    = openaiApiKey;
+      if (geminiApiKey)    body.geminiApiKey    = geminiApiKey;
+
+      try {
+        const res = await api('/ai-config', { method: 'PUT', body });
+        if (res.error) throw new Error(res.error);
+        showToast('Configuração de IA salva!');
+        // Clear typed keys from inputs (they are now stored)
+        if (anthropicApiKey) document.getElementById('ai-anthropic-key').value = '';
+        if (openaiApiKey)    document.getElementById('ai-openai-key').value    = '';
+        if (geminiApiKey)    document.getElementById('ai-gemini-key').value    = '';
+        loadAIConfig();
+      } catch (e) {
+        showToast('Erro ao salvar: ' + e.message, true);
+      }
+    }
+
+    async function testAIConfig() {
+      const btn = document.getElementById('ai-test-btn');
+      const result = document.getElementById('ai-test-result');
+      btn.disabled = true;
+      btn.textContent = '⏳ Testando...';
+      result.style.display = 'none';
+
+      try {
+        // Save first if there are values typed
+        const hasKey = ['anthropic','openai','gemini'].some(p =>
+          document.getElementById('ai-' + p + '-key').value.trim()
+        );
+        if (hasKey) await saveAIConfig();
+
+        const res = await api('/ai-config/test', { method: 'POST' });
+        if (res.error) throw new Error(res.error);
+
+        result.style.display = 'block';
+        result.innerHTML = `<span style="color:var(--green)">✅ IA funcionando perfeitamente!<br>Exemplo de frase gerada:<br><strong style="color:var(--accent2);font-size:14px">"${esc(res.headline)}"</strong></span>`;
+      } catch (e) {
+        result.style.display = 'block';
+        result.innerHTML = `<span style="color:var(--red)">❌ Erro: ${esc(e.message)}</span>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🧪 Testar';
+      }
+    }
+
+    function toggleKeyVisibility(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+      }
+    }
+
+    // Init
+    loadStatus();
+    loadProducts();
+    loadPostingConfig();
+    loadGroups();
+    loadTrends();
+    loadCategories();
+    loadAutoDiscovery();
+    loadAdCategories();
+    loadAIConfig();
+    checkMessengersStatus();
+    setInterval(loadStatus, 15000);
+  </script>
+</body>
+</html>

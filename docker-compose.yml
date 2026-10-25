@@ -1,0 +1,14 @@
+services:
+  bot:
+    build: .
+    container_name: affiliate-bot
+    restart: unless-stopped
+    env_file: .env
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./data:/app/data
+      - ./auth:/app/auth
