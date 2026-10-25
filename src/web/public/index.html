@@ -3,36 +3,72 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bot de Afiliados</title>
+  <title>Affiliate Bot Pro — Multi-Store</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #242836;
-      --border: #2e3348;
-      --text: #e4e6f0;
-      --text2: #8b8fa3;
-      --accent: #6c5ce7;
-      --accent2: #a29bfe;
-      --green: #00b894;
-      --red: #e17055;
-      --yellow: #fdcb6e;
-      --blue: #0984e3;
+      --bg: #080a0f;
+      --bg-gradient: radial-gradient(1000px circle at 15% -10%, rgba(99, 102, 241, 0.12), transparent 45%),
+                     radial-gradient(900px circle at 85% 15%, rgba(238, 77, 45, 0.08), transparent 40%),
+                     #080a0f;
+      --surface: rgba(18, 22, 34, 0.75);
+      --surface-solid: #121622;
+      --surface2: rgba(28, 34, 52, 0.6);
+      --surface2-solid: #1b2132;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(255, 255, 255, 0.16);
+      --border-focus: #6366f1;
+      --text: #f3f4f8;
+      --text2: #9499ad;
+      --accent: #6366f1;
+      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      --accent2: #818cf8;
+      --green: #10b981;
+      --green-glow: rgba(16, 185, 129, 0.25);
+      --red: #f43f5e;
+      --yellow: #f59e0b;
+      --blue: #3b82f6;
+      --shopee: #ee4d2d;
+      --ml: #ffe600;
+      --amazon: #ff9900;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      --transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-gradient);
+      background-attachment: fixed;
       color: var(--text);
       min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
+    h1, h2, h3, h4, .stat-card .number {
+      font-family: 'Outfit', sans-serif;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+
+    /* Header */
     .header {
-      background: var(--surface);
+      background: rgba(14, 17, 26, 0.82);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
-      padding: 16px 24px;
+      padding: 16px 28px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -41,234 +77,438 @@
       z-index: 100;
     }
 
-    .header h1 { font-size: 20px; font-weight: 700; }
-    .header h1 span { color: var(--accent2); }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--accent-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+    }
+
+    .header h1 {
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+    }
+    .header h1 span {
+      background: linear-gradient(135deg, #a5b4fc, #6366f1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .brand-badge {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(99, 102, 241, 0.15);
+      color: var(--accent2);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .status-badge-live {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 500;
+    }
 
     .status-dot {
-      width: 10px; height: 10px; border-radius: 50%;
-      display: inline-block; margin-right: 6px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      position: relative;
     }
-    .status-dot.online { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .status-dot.online {
+      background: var(--green);
+      box-shadow: 0 0 10px var(--green);
+    }
+    .status-dot.online::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      border: 2px solid var(--green);
+      animation: pulse 2s infinite;
+      opacity: 0.6;
+    }
     .status-dot.offline { background: var(--red); }
 
-    .container { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+    @keyframes pulse {
+      0% { transform: scale(0.9); opacity: 0.8; }
+      50% { transform: scale(1.6); opacity: 0; }
+      100% { transform: scale(0.9); opacity: 0; }
+    }
 
+    /* Container */
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+    }
+
+    /* Stats Grid */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 16px;
-      margin-bottom: 24px;
+      margin-bottom: 28px;
     }
 
     .stat-card {
       background: var(--surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      text-align: center;
+      border-radius: var(--radius-md);
+      padding: 22px 20px;
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+      transition: var(--transition);
     }
-    .stat-card .number { font-size: 32px; font-weight: 800; color: var(--accent2); }
-    .stat-card .label { font-size: 13px; color: var(--text2); margin-top: 4px; }
+    .stat-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--border-hover);
+      box-shadow: 0 12px 35px -8px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.4), transparent);
+    }
+    .stat-card .number {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text);
+      line-height: 1;
+    }
+    .stat-card .label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text2);
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
 
+    /* Tabs */
     .tabs {
       display: flex;
-      gap: 4px;
-      background: var(--surface);
-      border-radius: 12px;
-      padding: 4px;
-      margin-bottom: 24px;
+      gap: 6px;
+      background: rgba(18, 22, 34, 0.6);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 6px;
+      margin-bottom: 28px;
       overflow-x: auto;
     }
     .tab {
       padding: 10px 20px;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
       font-size: 14px;
-      font-weight: 500;
+      font-weight: 600;
       color: var(--text2);
       border: none;
       background: none;
       white-space: nowrap;
-      transition: all 0.2s;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .tab:hover { color: var(--text); background: var(--surface2); }
-    .tab.active { color: white; background: var(--accent); }
+    .tab:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .tab.active {
+      color: white;
+      background: var(--accent-gradient);
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+    }
 
     .panel { display: none; }
-    .panel.active { display: block; }
+    .panel.active { display: block; animation: fadeIn 0.3s ease; }
 
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards */
     .card {
       background: var(--surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 16px;
+      border-radius: var(--radius-md);
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-card);
     }
-    .card h3 { font-size: 16px; margin-bottom: 16px; }
+    .card h3 {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
+    /* Input & Forms */
     .input-row {
       display: flex;
       gap: 12px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
     input, select {
-      background: var(--surface2);
+      background: var(--surface2-solid);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 14px;
+      border-radius: 10px;
+      padding: 12px 16px;
       color: var(--text);
       font-size: 14px;
+      font-family: inherit;
       flex: 1;
       outline: none;
+      transition: var(--transition);
     }
-    input:focus { border-color: var(--accent); }
+    input:focus, select:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+    input::placeholder { color: #5a6177; }
 
+    /* Buttons */
     button {
-      padding: 10px 20px;
-      border-radius: 8px;
+      padding: 11px 22px;
+      border-radius: 10px;
       border: none;
       font-size: 14px;
       font-weight: 600;
+      font-family: inherit;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
-    .btn-primary { background: var(--accent); color: white; }
-    .btn-primary:hover { background: var(--accent2); }
-    .btn-success { background: var(--green); color: white; }
-    .btn-success:hover { opacity: 0.9; }
-    .btn-danger { background: var(--red); color: white; }
-    .btn-danger:hover { opacity: 0.9; }
-    .btn-small { padding: 6px 14px; font-size: 12px; }
+    button:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: var(--accent-gradient);
+      color: white;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+    }
+    .btn-primary:hover {
+      box-shadow: 0 6px 22px rgba(99, 102, 241, 0.5);
+      transform: translateY(-1px);
+    }
+    .btn-success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+    }
+    .btn-success:hover {
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+      transform: translateY(-1px);
+    }
+    .btn-danger {
+      background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+      color: white;
+    }
+    .btn-danger:hover { opacity: 0.95; transform: translateY(-1px); }
+    .btn-small { padding: 7px 16px; font-size: 12.5px; border-radius: 8px; }
     .btn-outline {
-      background: transparent;
-      color: var(--accent2);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
       border: 1px solid var(--border);
     }
-    .btn-outline:hover { border-color: var(--accent); }
+    .btn-outline:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--border-hover);
+    }
 
+    /* Product List */
     .product-list { display: flex; flex-direction: column; gap: 12px; }
 
     .product-item {
       display: flex;
       align-items: center;
-      gap: 14px;
-      background: var(--surface2);
-      border-radius: 10px;
-      padding: 12px;
+      gap: 16px;
+      background: var(--surface2-solid);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      transition: var(--transition);
+    }
+    .product-item:hover {
+      border-color: var(--border-hover);
+      transform: translateX(2px);
     }
     .product-item img {
-      width: 64px; height: 64px;
-      border-radius: 8px;
+      width: 68px;
+      height: 68px;
+      border-radius: 10px;
       object-fit: cover;
       background: var(--border);
+      border: 1px solid rgba(255,255,255,0.06);
     }
     .product-info { flex: 1; min-width: 0; }
     .product-info .title {
       font-size: 14px;
-      font-weight: 500;
+      font-weight: 600;
+      color: var(--text);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .product-info .meta { font-size: 12px; color: var(--text2); margin-top: 4px; }
-    .product-info .price { font-size: 16px; font-weight: 700; color: var(--green); margin-top: 4px; }
+    .product-info .price {
+      font-size: 16px;
+      font-weight: 700;
+      color: #34d399;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+    }
     .product-info .discount {
-      font-size: 12px;
-      background: var(--red);
-      color: white;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-weight: 600;
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(244, 63, 94, 0.18);
+      color: #fb7185;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      padding: 2px 7px;
+      border-radius: 6px;
       margin-left: 8px;
     }
     .product-info .old-price {
       text-decoration: line-through;
-      color: var(--text2);
+      color: #6b7280;
       font-size: 13px;
       margin-right: 8px;
+      font-weight: 500;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
+    /* Table */
+    table { width: 100%; border-collapse: collapse; }
     th, td {
       text-align: left;
-      padding: 10px 14px;
+      padding: 12px 16px;
       border-bottom: 1px solid var(--border);
       font-size: 14px;
     }
-    th { color: var(--text2); font-weight: 500; font-size: 12px; text-transform: uppercase; }
+    th {
+      color: var(--text2);
+      font-weight: 600;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
 
+    /* Badges */
     .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
       padding: 4px 10px;
       border-radius: 6px;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 600;
     }
-    .badge-green { background: rgba(0,184,148,0.15); color: var(--green); }
-    .badge-yellow { background: rgba(253,203,110,0.15); color: var(--yellow); }
-    .badge-red { background: rgba(225,112,85,0.15); color: var(--red); }
-    .badge-blue { background: rgba(9,132,227,0.15); color: var(--blue); }
+    .badge-green { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-yellow { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-red { background: rgba(244, 63, 94, 0.15); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
+    .badge-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
 
-    .empty { text-align: center; padding: 40px; color: var(--text2); }
+    .empty { text-align: center; padding: 48px; color: var(--text2); font-size: 14px; }
 
+    /* Toast */
     .toast {
       position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: var(--green);
+      bottom: 28px;
+      right: 28px;
+      background: #10b981;
       color: white;
-      padding: 12px 24px;
-      border-radius: 10px;
+      padding: 14px 24px;
+      border-radius: 12px;
       font-weight: 600;
       font-size: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
       transform: translateY(100px);
       opacity: 0;
-      transition: all 0.3s;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       z-index: 1000;
     }
     .toast.show { transform: translateY(0); opacity: 1; }
-    .toast.error { background: var(--red); }
+    .toast.error { background: #f43f5e; }
 
     .loading { opacity: 0.5; pointer-events: none; }
 
+    /* Modal */
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(4px);
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       z-index: 200;
       display: flex;
       align-items: center;
       justify-content: center;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.2s;
+      transition: opacity 0.25s;
     }
-    .modal-overlay.open {
-      opacity: 1;
-      pointer-events: auto;
-    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
     .modal {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
+      background: #141824;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-lg);
       width: 90%;
-      max-width: 480px;
-      padding: 0;
-      transform: translateY(20px) scale(0.97);
-      transition: transform 0.25s;
+      max-width: 520px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);
+      transform: translateY(20px) scale(0.96);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       overflow: hidden;
     }
-    .modal-overlay.open .modal {
-      transform: translateY(0) scale(1);
-    }
+    .modal-overlay.open .modal { transform: translateY(0) scale(1); }
     .modal-header {
       display: flex;
       align-items: center;
       gap: 14px;
-      padding: 20px;
+      padding: 20px 24px;
       border-bottom: 1px solid var(--border);
     }
     .modal-header img {
@@ -278,13 +518,10 @@
       object-fit: cover;
       background: var(--border);
     }
-    .modal-header-text {
-      flex: 1;
-      min-width: 0;
-    }
+    .modal-header-text { flex: 1; min-width: 0; }
     .modal-header-text h4 {
       font-size: 15px;
-      font-weight: 600;
+      font-weight: 700;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -296,39 +533,40 @@
       display: block;
     }
     .modal-close {
-      background: none;
+      background: rgba(255,255,255,0.06);
       border: none;
       color: var(--text2);
-      font-size: 22px;
+      font-size: 20px;
       cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 6px;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       line-height: 1;
     }
-    .modal-close:hover { color: var(--text); background: var(--surface2); }
-    .modal-body { padding: 20px; }
+    .modal-close:hover { color: var(--text); background: rgba(255,255,255,0.12); }
+    .modal-body { padding: 22px 24px; }
     .modal-body label {
       display: block;
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 600;
       color: var(--text2);
       margin-bottom: 6px;
     }
-    .modal-body input {
-      width: 100%;
-      margin-bottom: 16px;
-    }
+    .modal-body input { width: 100%; margin-bottom: 14px; }
     .modal-body .hint {
       font-size: 11px;
       color: var(--text2);
-      margin-top: -12px;
+      margin-top: -10px;
       margin-bottom: 16px;
     }
     .modal-preview {
-      background: var(--bg);
+      background: rgba(0, 0, 0, 0.35);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 14px;
+      padding: 16px;
       margin-bottom: 20px;
       font-size: 13px;
       line-height: 1.6;
@@ -348,59 +586,92 @@
       display: flex;
       gap: 10px;
       justify-content: flex-end;
-      padding: 16px 20px;
+      padding: 16px 24px;
       border-top: 1px solid var(--border);
+      background: rgba(0,0,0,0.15);
     }
 
-    @media (max-width: 600px) {
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .input-row { flex-direction: column; }
-      .header h1 { font-size: 16px; }
+    @media (max-width: 768px) {
+      .header { padding: 14px 18px; }
+      .container { padding: 18px 14px 40px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .input-row { flex-direction: column; gap: 8px; }
+      .header h1 span { display: none; }
       .modal { width: 95%; }
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>🚀 <span>Bot de Afiliados</span></h1>
-    <div id="connection-status">
-      <span class="status-dot offline"></span>
-      <span style="font-size:13px;color:var(--text2)">Conectando...</span>
+  <header class="header">
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <div>
+        <h1>Affiliate <span>Pilot Pro</span> <span class="brand-badge">Multi-Store</span></h1>
+      </div>
     </div>
-  </div>
+    <div id="connection-status" class="status-badge-live">
+      <span class="status-dot offline"></span>
+      <span style="font-size:12.5px;color:var(--text2)">Conectando...</span>
+    </div>
+  </header>
 
   <div class="container">
     <div class="stats-grid" id="stats">
-      <div class="stat-card"><div class="number" id="stat-pending">-</div><div class="label">Pendentes</div></div>
-      <div class="stat-card"><div class="number" id="stat-posted">-</div><div class="label">Postados</div></div>
-      <div class="stat-card"><div class="number" id="stat-groups">-</div><div class="label">Grupos</div></div>
-      <div class="stat-card"><div class="number" id="stat-scheduler">-</div><div class="label">Postagem Auto</div></div>
+      <div class="stat-card">
+        <div class="number" id="stat-pending">-</div>
+        <div class="label">⏳ Fila Pendente</div>
+      </div>
+      <div class="stat-card">
+        <div class="number" id="stat-posted">-</div>
+        <div class="label">✅ Postados Hoje</div>
+      </div>
+      <div class="stat-card">
+        <div class="number" id="stat-groups">-</div>
+        <div class="label">👥 Grupos Ativos</div>
+      </div>
+      <div class="stat-card">
+        <div class="number" id="stat-scheduler">-</div>
+        <div class="label">⚙️ Piloto Automático</div>
+      </div>
     </div>
 
-    <div class="tabs">
-      <button class="tab active" data-tab="products">Produtos</button>
-      <button class="tab" data-tab="discover">Descobrir</button>
-      <button class="tab" data-tab="schedules">Postagem</button>
-      <button class="tab" data-tab="groups">Grupos</button>
-      <button class="tab" data-tab="autodiscovery">Auto Discovery</button>
-      <button class="tab" data-tab="ai">🤖 IA</button>
-      <button class="tab" data-tab="marketplaces">🏬 Lojas</button>
-    </div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="products">📦 Produtos</button>
+      <button class="tab" data-tab="marketplaces">🏬 Lojas & Afiliados</button>
+      <button class="tab" data-tab="schedules">⏱️ Postagem</button>
+      <button class="tab" data-tab="groups">💬 Grupos</button>
+      <button class="tab" data-tab="discover">🔍 Descobrir</button>
+      <button class="tab" data-tab="autodiscovery">🤖 Auto Discovery</button>
+      <button class="tab" data-tab="ai">🪄 Inteligência Artificial</button>
+    </nav>
 
     <!-- Products Panel -->
     <div class="panel active" id="panel-products">
-      <div class="card">
-        <h3>Adicionar Produto</h3>
-        <div class="input-row">
-          <input type="text" id="add-url" placeholder="Cole a URL do produto (Mercado Livre ou Shopee)..." style="flex:2">
-          <button class="btn-primary" onclick="addProduct()">Adicionar</button>
+      <div class="card" style="position:relative;overflow:hidden">
+        <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle, rgba(99,102,241,0.18), transparent 70%);pointer-events:none"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+          <h3 style="margin:0">✨ Adicionar Produto à Fila</h3>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span class="badge" style="background:rgba(255,230,0,0.12);color:#fde047;border:1px solid rgba(255,230,0,0.25)">🟡 Mercado Livre</span>
+            <span class="badge" style="background:rgba(238,77,45,0.12);color:#fb7185;border:1px solid rgba(238,77,45,0.25)">🟠 Shopee</span>
+            <span class="badge" style="background:rgba(255,153,0,0.12);color:#fdba74;border:1px solid rgba(255,153,0,0.25)">📦 Amazon</span>
+          </div>
         </div>
+        
         <div class="input-row">
-          <input type="text" id="add-headline" placeholder="Título chamativo (ex: FONE TOP BLUETOOTH)" style="flex:1">
-          <input type="text" id="add-coupon" placeholder="Cupom (ex: ESQUENTA15)" style="flex:1;max-width:200px">
+          <input type="text" id="add-url" placeholder="Cole o link do produto (ex: shopee.com.br, s.shopee.com.br ou mercadolivre.com.br)..." style="flex:2;font-size:14.5px">
+          <button class="btn-primary" onclick="addProduct()">
+            <span>➕ Adicionar à Fila</span>
+          </button>
         </div>
-        <div style="font-size:12px;color:var(--text2)">
-          Título e cupom são opcionais. O título aparece em destaque no post. Sem título, usa um resumo do nome do produto.
+
+        <div class="input-row">
+          <input type="text" id="add-headline" placeholder="Título chamativo opcional (ex: O MESSI QUE INDICOU ⚽)" style="flex:1">
+          <input type="text" id="add-coupon" placeholder="Cupom de desconto (ex: ESQUENTA10)" style="flex:1;max-width:240px">
+        </div>
+
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin-top:4px">
+          <span>💡 <strong>Dica:</strong> Se você não preencher o título, a Inteligência Artificial pode gerar frases de alta conversão automaticamente para os grupos.</span>
         </div>
       </div>
       <div class="card">
@@ -733,86 +1004,93 @@
 
     <!-- Marketplaces Panel -->
     <div class="panel" id="panel-marketplaces">
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <h3 style="margin:0">🏬 Lojas & Afiliados</h3>
+      <div class="card" style="position:relative;overflow:hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:12px">
+          <div>
+            <h3 style="margin:0;font-size:18px">🏬 Lojas & Contas de Afiliado</h3>
+            <p style="font-size:13px;color:var(--text2);margin-top:4px">
+              Conecte suas contas oficiais. O sistema detecta o marketplace automaticamente ao colar qualquer link e gera o link encurtado oficial com sua comissão garantida.
+            </p>
+          </div>
           <div id="mp-status-badges" style="display:flex;gap:6px"></div>
         </div>
-        <p style="font-size:13px;color:var(--text2);margin-bottom:24px">
-          Configure suas contas de afiliado. O bot detecta automaticamente o marketplace de qualquer link que você colar e gera o link oficial com a sua comissão.
-        </p>
 
         <!-- Shopee Section -->
-        <div style="background:var(--surface2);border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid var(--border)">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-            <div style="display:flex;align-items:center;gap:10px">
-              <span style="font-size:24px">🟠</span>
+        <div style="background:linear-gradient(180deg, rgba(238, 77, 45, 0.08) 0%, rgba(20, 24, 36, 0.7) 100%);border-radius:14px;padding:22px;margin-bottom:20px;border:1px solid rgba(238, 77, 45, 0.25);border-left:5px solid #ee4d2d;box-shadow:var(--shadow-card)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:44px;height:44px;border-radius:10px;background:rgba(238,77,45,0.15);display:flex;align-items:center;justify-content:center;font-size:24px;border:1px solid rgba(238,77,45,0.3)">🟠</div>
               <div>
-                <h4 style="margin:0;font-size:16px">Shopee Afiliados</h4>
-                <div style="font-size:12px;color:var(--text2)">Open API (GraphQL) oficial da Shopee</div>
+                <h4 style="margin:0;font-size:16.5px;color:var(--text)">Shopee Afiliados</h4>
+                <div style="font-size:12px;color:var(--text2)">Open API (GraphQL) oficial da Shopee Brasil</div>
               </div>
             </div>
             <div id="shopee-badge"><span class="badge badge-yellow">Não configurada</span></div>
           </div>
 
-          <div style="margin-bottom:12px">
-            <label style="display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Shopee App ID</label>
-            <input type="text" id="shopee-app-id" placeholder="Ex: 1234567890" style="width:100%">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:14px;margin-bottom:14px">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Shopee App ID</label>
+              <input type="text" id="shopee-app-id" placeholder="Ex: 1234567890" style="width:100%">
+            </div>
+
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Shopee Secret Key</label>
+              <div style="display:flex;gap:8px">
+                <input type="password" id="shopee-secret" placeholder="Cole sua Secret Key..." autocomplete="off" style="flex:1">
+                <button class="btn-outline btn-small" onclick="toggleKeyVisibility('shopee-secret', this)" title="Ver/Ocultar chave">👁️</button>
+              </div>
+            </div>
           </div>
 
-          <div style="margin-bottom:12px">
-            <label style="display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Shopee Secret Key</label>
-            <div style="display:flex;gap:8px">
-              <input type="password" id="shopee-secret" placeholder="Cole sua Secret Key..." autocomplete="off" style="flex:1">
-              <button class="btn-outline btn-small" onclick="toggleKeyVisibility('shopee-secret', this)">👁️</button>
-            </div>
-            <div style="font-size:11px;color:var(--text2);margin-top:4px">
-              Obtenha em <a href="https://afiliados.shopee.com.br" target="_blank" style="color:var(--accent2)">afiliados.shopee.com.br</a> ➔ Configurações da Conta ➔ Open API.
-            </div>
+          <div style="font-size:11.5px;color:var(--text2);margin-bottom:16px;display:flex;align-items:center;gap:6px">
+            <span>ℹ️ Obtenha suas credenciais em <a href="https://afiliados.shopee.com.br" target="_blank" style="color:var(--accent2);text-decoration:none;font-weight:600">afiliados.shopee.com.br</a> ➔ Configurações da Conta ➔ Open API.</span>
           </div>
 
-          <div style="display:flex;gap:10px;margin-top:14px">
-            <button class="btn-primary btn-small" onclick="saveShopeeConfig()">💾 Salvar Shopee</button>
-            <button class="btn-outline btn-small" onclick="testShopeeConnection()" id="shopee-test-btn">🧪 Testar Conexão</button>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn-primary btn-small" onclick="saveShopeeConfig()">💾 Salvar Credenciais Shopee</button>
+            <button class="btn-outline btn-small" onclick="testShopeeConnection()" id="shopee-test-btn">🧪 Testar Conexão em Tempo Real</button>
           </div>
-          <div id="shopee-test-result" style="margin-top:10px;font-size:13px;display:none"></div>
+          <div id="shopee-test-result" style="margin-top:12px;font-size:13px;display:none"></div>
         </div>
 
         <!-- Amazon Section -->
-        <div style="background:var(--surface2);border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid var(--border)">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-            <div style="display:flex;align-items:center;gap:10px">
-              <span style="font-size:24px">📦</span>
+        <div style="background:linear-gradient(180deg, rgba(255, 153, 0, 0.08) 0%, rgba(20, 24, 36, 0.7) 100%);border-radius:14px;padding:22px;margin-bottom:20px;border:1px solid rgba(255, 153, 0, 0.25);border-left:5px solid #ff9900;box-shadow:var(--shadow-card)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:44px;height:44px;border-radius:10px;background:rgba(255,153,0,0.15);display:flex;align-items:center;justify-content:center;font-size:24px;border:1px solid rgba(255,153,0,0.3)">📦</div>
               <div>
-                <h4 style="margin:0;font-size:16px">Amazon Associados</h4>
-                <div style="font-size:12px;color:var(--text2)">Tag de rastreamento e PA-API 5.0</div>
+                <h4 style="margin:0;font-size:16.5px;color:var(--text)">Amazon Associados</h4>
+                <div style="font-size:12px;color:var(--text2)">Tag de rastreamento e monetização da Amazon Brasil</div>
               </div>
             </div>
-            <div id="amazon-badge"><span class="badge badge-yellow">Em breve</span></div>
+            <div id="amazon-badge"><span class="badge badge-yellow">Sem tag</span></div>
           </div>
 
-          <div style="margin-bottom:12px">
-            <label style="display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Associate / Partner Tag (ex: seunome-20)</label>
-            <input type="text" id="amazon-tag" placeholder="ex: seunome-20" style="width:100%">
-            <div style="font-size:11px;color:var(--text2);margin-top:4px">Sua ID de rastreamento do portal de Associados Amazon Brasil.</div>
+          <div style="margin-bottom:14px">
+            <label style="display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Associate / Partner Tag Oficial (ex: seunome-20)</label>
+            <input type="text" id="amazon-tag" placeholder="ex: seunome-20" style="width:100%;max-width:400px">
+            <div style="font-size:11.5px;color:var(--text2);margin-top:6px">
+              Sua ID de rastreamento única do portal de Associados da Amazon. Todos os links da Amazon receberão automaticamente sua tag.
+            </div>
           </div>
 
-          <div style="display:flex;gap:10px;margin-top:14px">
-            <button class="btn-primary btn-small" onclick="saveAmazonConfig()">💾 Salvar Amazon</button>
+          <div style="display:flex;gap:10px">
+            <button class="btn-primary btn-small" onclick="saveAmazonConfig()">💾 Salvar Tag Amazon</button>
           </div>
         </div>
 
         <!-- Mercado Livre Section -->
-        <div style="background:var(--surface2);border-radius:12px;padding:20px;border:1px solid var(--border)">
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <div style="display:flex;align-items:center;gap:10px">
-              <span style="font-size:24px">🟡</span>
+        <div style="background:linear-gradient(180deg, rgba(255, 230, 0, 0.08) 0%, rgba(20, 24, 36, 0.7) 100%);border-radius:14px;padding:22px;border:1px solid rgba(255, 230, 0, 0.25);border-left:5px solid #ffe600;box-shadow:var(--shadow-card)">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:44px;height:44px;border-radius:10px;background:rgba(255,230,0,0.15);display:flex;align-items:center;justify-content:center;font-size:24px;border:1px solid rgba(255,230,0,0.3)">🟡</div>
               <div>
-                <h4 style="margin:0;font-size:16px">Mercado Livre</h4>
-                <div style="font-size:12px;color:var(--text2)">Conexão oficial OAuth2 com Mercado Livre Brasil</div>
+                <h4 style="margin:0;font-size:16.5px;color:var(--text)">Mercado Livre Brasil</h4>
+                <div style="font-size:12px;color:var(--text2)">Conexão oficial OAuth2 com a API do Mercado Livre</div>
               </div>
             </div>
-            <div><span class="badge badge-green">Conectado ✅</span></div>
+            <div><span class="badge badge-green">Conectado Oficial ✅</span></div>
           </div>
         </div>
       </div>
