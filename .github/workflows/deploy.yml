@@ -1,0 +1,44 @@
+name: Deploy Automático na VPS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build & Deploy na VPS Oracle
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout do Repositório
+        uses: actions/checkout@v4
+
+      - name: 🚚 Transferir arquivos para a VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          source: "./*"
+          target: "~/app"
+          rm: false
+
+      - name: 🚀 Reconstruir e Iniciar Container Docker
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script_stop: true
+          script: |
+            cd ~/app
+            echo "Iniciando build do container na VPS..."
+            sudo docker compose up --build -d
+            echo "Verificando containers ativos:"
+            sudo docker ps --filter "name=affiliate-bot"
+            echo "Deploy concluido com sucesso!"
