@@ -1,3 +1,10 @@
 node_modules/
 dist/
 bot-deploy.tar.gz
+
+# Dados em runtime: sessao do WhatsApp e banco de dados.
+# Nunca devem ser versionados (contem credenciais/sessoes reais e
+# sobrescreveriam os dados de producao da VPS a cada deploy).
+auth/
+data/
+*.key
