@@ -19,6 +19,7 @@ export class WhatsAppBot implements MessengerProvider {
   private connected = false;
   private initialized = false;
   private latestQr: string | null = null;
+  private manualDisconnect = false;
 
   hasExistingAuth(): boolean {
     try {
@@ -35,6 +36,7 @@ export class WhatsAppBot implements MessengerProvider {
   async initialize(): Promise<void> {
     if (this.initialized) return;
     this.initialized = true;
+    this.manualDisconnect = false;
 
     const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
 
@@ -61,10 +63,19 @@ export class WhatsAppBot implements MessengerProvider {
 
       if (connection === 'close') {
         this.connected = false;
+        this.socket = null;
         const statusCode = (lastDisconnect?.error as any)?.output?.statusCode;
+
+        if (this.manualDisconnect) {
+          this.manualDisconnect = false;
+          this.initialized = false;
+          console.log('[WhatsApp] Desconectado manualmente.');
+          return;
+        }
 
         if (statusCode === DisconnectReason.loggedOut) {
           this.initialized = false;
+          this.clearAuthState();
           console.log('[WhatsApp] Deslogado. Reconecte pelo dashboard.');
         } else {
           console.log('[WhatsApp] Desconectado. Reconectando...');
@@ -157,12 +168,40 @@ export class WhatsAppBot implements MessengerProvider {
     }
   }
 
-  async disconnect(): Promise<void> {
+  async disconnect(fullLogout = false): Promise<void> {
+    this.manualDisconnect = true;
+
     if (this.socket) {
-      this.socket.end(undefined);
-      this.connected = false;
-      this.initialized = false;
-      console.log('[WhatsApp] Desconectado.');
+      try {
+        if (fullLogout) {
+          await this.socket.logout();
+        } else {
+          this.socket.end(undefined);
+        }
+      } catch {
+        this.socket.end(undefined);
+      }
+    }
+
+    this.socket = null;
+    this.connected = false;
+    this.initialized = false;
+    this.latestQr = null;
+    this.manualDisconnect = false;
+
+    if (fullLogout) {
+      this.clearAuthState();
+      console.log('[WhatsApp] Desconectado e sessão removida. Pronto para conectar outro número.');
+    } else {
+      console.log('[WhatsApp] Conexão encerrada (sessão preservada).');
+    }
+  }
+
+  private clearAuthState(): void {
+    try {
+      fs.rmSync(AUTH_DIR, { recursive: true, force: true });
+    } catch (err) {
+      console.error('[WhatsApp] Erro ao limpar sessão salva:', err);
     }
   }
 

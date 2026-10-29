@@ -110,7 +110,7 @@ export class TelegramBot implements MessengerProvider {
     return Array.from(knownGroups.entries()).map(([id, name]) => ({ id, name }));
   }
 
-  async disconnect(): Promise<void> {
+  async disconnect(_fullLogout = false): Promise<void> {
     if (bot) {
       await bot.stop();
       this.running = false;

@@ -224,7 +224,7 @@ export function createWebServer(
     if (!messenger) return res.status(404).json({ error: 'Plataforma não encontrada' });
 
     try {
-      await messenger.disconnect();
+      await messenger.disconnect(true);
       res.json({ success: true });
     } catch (err: any) {
       res.status(500).json({ error: err.message });

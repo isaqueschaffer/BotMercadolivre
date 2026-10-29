@@ -30,7 +30,11 @@ async function main(): Promise<void> {
   const messengers: MessengerProvider[] = [];
 
   const telegramBot = new TelegramBot(marketplace);
-  await telegramBot.initialize();
+  if (!process.env.SKIP_TELEGRAM) {
+    await telegramBot.initialize();
+  } else {
+    console.log('[Telegram] Pulado (SKIP_TELEGRAM=true) — evitando conflito com instância de produção.\n');
+  }
   messengers.push(telegramBot);
 
   // WhatsApp is always created but only auto-connects if enabled in .env
