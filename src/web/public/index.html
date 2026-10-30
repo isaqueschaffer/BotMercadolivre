@@ -220,19 +220,29 @@
 
     /* Toggle stat-card (piloto automatico) */
     .stat-card.toggle-card {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      text-align: left;
+      margin: 0;
+      -webkit-appearance: none;
       appearance: none;
       font-family: inherit;
+      font-size: inherit;
       color: inherit;
       width: 100%;
+      min-height: 44px;
       cursor: pointer;
       user-select: none;
+      touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
     }
     .stat-card.toggle-card:hover {
       border-color: var(--accent2);
     }
     .stat-card.toggle-card:active {
-      transform: translateY(0) scale(0.98);
+      transform: scale(0.98);
     }
     .stat-card.toggle-card:focus-visible {
       outline: 2px solid var(--accent2);
@@ -257,9 +267,21 @@
       display: block;
     }
 
+    /* Em telas sem hover (touch), evita o "hover preso" apos o toque
+       e usa so o estado :active para dar feedback de toque. */
     @media (hover: none) {
+      .stat-card.toggle-card {
+        transition: border-color 0.15s ease, transform 0.1s ease;
+      }
+      .stat-card.toggle-card:hover {
+        transform: none;
+        border-color: var(--border);
+      }
+      .stat-card.toggle-card.is-on:hover { border-color: rgba(16, 185, 129, 0.45); }
+      .stat-card.toggle-card.is-off:hover { border-color: var(--border); }
       .stat-card.toggle-card:active {
         border-color: var(--accent2);
+        transform: scale(0.98);
       }
     }
 
@@ -643,6 +665,12 @@
       .input-row { flex-direction: column; gap: 8px; }
       .header h1 span { display: none; }
       .modal { width: 95%; }
+      .stat-card.toggle-card { padding: 18px 16px; }
+      .stat-card.toggle-card .hint { font-size: 10.5px; }
+    }
+
+    @media (max-width: 380px) {
+      .stat-card.toggle-card .hint { display: none; }
     }
   </style>
 </head>
