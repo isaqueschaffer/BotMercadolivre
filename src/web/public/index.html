@@ -374,7 +374,7 @@
       border-color: var(--border-focus);
       box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
     }
-    input::placeholder { color: #5a6177; }
+    input::placeholder { color: #8186a0; }
 
     /* Buttons */
     button {
@@ -433,6 +433,7 @@
     .product-item {
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 16px;
       background: var(--surface2-solid);
       border: 1px solid var(--border);
@@ -482,13 +483,14 @@
     }
     .product-info .old-price {
       text-decoration: line-through;
-      color: #6b7280;
+      color: #8b93a8;
       font-size: 13px;
       margin-right: 8px;
       font-weight: 500;
     }
 
     /* Table */
+    .table-scroll { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; }
     th, td {
       text-align: left;
@@ -526,12 +528,14 @@
       position: fixed;
       bottom: 28px;
       right: 28px;
+      max-width: calc(100vw - 56px);
       background: #10b981;
       color: white;
       padding: 14px 24px;
       border-radius: 12px;
       font-weight: 600;
       font-size: 14px;
+      word-wrap: break-word;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
       transform: translateY(100px);
       opacity: 0;
@@ -542,6 +546,25 @@
     .toast.error { background: #f43f5e; }
 
     .loading { opacity: 0.5; pointer-events: none; }
+
+    /* WhatsApp QR Code */
+    .qr-wrap {
+      background: white;
+      display: inline-block;
+      padding: 16px;
+      border-radius: 12px;
+      max-width: 100%;
+    }
+    .qr-img {
+      width: 256px;
+      height: 256px;
+      max-width: 100%;
+      aspect-ratio: 1 / 1;
+    }
+    @media (max-width: 400px) {
+      .qr-box { padding: 12px; }
+      .qr-wrap { padding: 10px; }
+    }
 
     /* Modal */
     .modal-overlay {
@@ -662,15 +685,33 @@
       .header { padding: 14px 18px; }
       .container { padding: 18px 14px 40px; }
       .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .stat-card { padding: 18px 16px; }
       .input-row { flex-direction: column; gap: 8px; }
       .header h1 span { display: none; }
       .modal { width: 95%; }
-      .stat-card.toggle-card { padding: 18px 16px; }
       .stat-card.toggle-card .hint { font-size: 10.5px; }
+      /* iOS faz zoom automatico em campos com font-size < 16px ao focar */
+      input, select { font-size: 16px; }
+      #add-coupon, #group-platform { max-width: none; }
+      .toast { left: 14px; right: 14px; max-width: none; bottom: 18px; }
+      .btn-small { padding: 9px 16px; }
+    }
+
+    @media (max-width: 400px) {
+      .brand-badge { display: none; }
     }
 
     @media (max-width: 380px) {
       .stat-card.toggle-card .hint { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .status-dot.online::after { animation: none; }
+      *, *::before, *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+      }
     }
   </style>
 </head>
@@ -688,7 +729,7 @@
     </div>
   </header>
 
-  <div class="container">
+  <main class="container">
     <div class="stats-grid" id="stats">
       <div class="stat-card">
         <div class="number" id="stat-pending">-</div>
@@ -817,7 +858,7 @@
           <div style="display:flex;gap:8px;flex-wrap:wrap" id="interval-buttons"></div>
         </div>
 
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+        <div style="display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:6px">
           <label style="font-size:13px;color:var(--text2);white-space:nowrap">Ou valor personalizado:</label>
           <input type="number" id="posting-interval-custom" min="1" max="1440" placeholder="Minutos" style="max-width:120px" onchange="setCustomInterval()">
           <span style="font-size:13px;color:var(--text2)">minutos</span>
@@ -888,10 +929,12 @@
       <!-- Registered Groups -->
       <div class="card">
         <h3>Grupos Registrados</h3>
-        <table>
-          <thead><tr><th>Plataforma</th><th>Nome</th><th>ID</th><th>Status</th><th></th></tr></thead>
-          <tbody id="groups-table"><tr><td colspan="5" class="empty">Carregando...</td></tr></tbody>
-        </table>
+        <div class="table-scroll">
+          <table style="min-width:560px">
+            <thead><tr><th>Plataforma</th><th>Nome</th><th>ID</th><th>Status</th><th></th></tr></thead>
+            <tbody id="groups-table"><tr><td colspan="5" class="empty">Carregando...</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -908,7 +951,7 @@
           filtra pelos seus critérios e adiciona os melhores à fila de postagem.
         </p>
 
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:16px;background:var(--surface2);border-radius:10px">
+        <div style="display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px;padding:16px;background:var(--surface2);border-radius:10px">
           <label style="font-weight:600;font-size:14px;white-space:nowrap">Motor de busca:</label>
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
             <input type="checkbox" id="ad-enabled" onchange="saveAutoDiscovery()" style="width:auto;flex:none;accent-color:var(--accent)">
@@ -917,22 +960,22 @@
           <button class="btn-primary btn-small" onclick="runDiscoveryNow()" style="margin-left:auto">Executar Agora</button>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(min(140px, 100%), 1fr));gap:16px;margin-bottom:20px">
           <div>
             <label style="display:block;font-size:12px;color:var(--text2);margin-bottom:6px">Intervalo (minutos)</label>
-            <input type="number" id="ad-interval" value="60" min="15" max="1440" onchange="saveAutoDiscovery()">
+            <input type="number" id="ad-interval" value="60" min="15" max="1440" style="width:100%" onchange="saveAutoDiscovery()">
           </div>
           <div>
             <label style="display:block;font-size:12px;color:var(--text2);margin-bottom:6px">Desconto mínimo (%)</label>
-            <input type="number" id="ad-min-discount" value="10" min="0" max="90" onchange="saveAutoDiscovery()">
+            <input type="number" id="ad-min-discount" value="10" min="0" max="90" style="width:100%" onchange="saveAutoDiscovery()">
           </div>
           <div>
             <label style="display:block;font-size:12px;color:var(--text2);margin-bottom:6px">Preço máximo (R$)</label>
-            <input type="number" id="ad-max-price" value="" min="0" step="50" placeholder="Sem limite" onchange="saveAutoDiscovery()">
+            <input type="number" id="ad-max-price" value="" min="0" step="50" placeholder="Sem limite" style="width:100%" onchange="saveAutoDiscovery()">
           </div>
           <div>
             <label style="display:block;font-size:12px;color:var(--text2);margin-bottom:6px">Produtos por execução</label>
-            <input type="number" id="ad-max-products" value="10" min="1" max="50" onchange="saveAutoDiscovery()">
+            <input type="number" id="ad-max-products" value="10" min="1" max="50" style="width:100%" onchange="saveAutoDiscovery()">
           </div>
         </div>
 
@@ -1102,7 +1145,7 @@
             <div id="shopee-badge"><span class="badge badge-yellow">Não configurada</span></div>
           </div>
 
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:14px;margin-bottom:14px">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(min(260px, 100%), 1fr));gap:14px;margin-bottom:14px">
             <div>
               <label style="display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Shopee App ID</label>
               <input type="text" id="shopee-app-id" placeholder="Ex: 1234567890" style="width:100%">
@@ -1169,7 +1212,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </main>
 
   <div class="modal-overlay" id="edit-modal">
     <div class="modal">
@@ -1275,7 +1318,7 @@
       }
 
       list.innerHTML = products.map((p, idx) => `
-        <div class="product-item" style="flex-wrap:wrap">
+        <div class="product-item">
           ${status === 'pending' ? '<div style="font-size:11px;font-weight:800;color:var(--text2);min-width:24px;text-align:center">#' + (idx + 1) + '</div>' : ''}
           <img src="${p.imageUrl}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22><rect fill=%22%23242836%22 width=%2264%22 height=%2264%22/><text fill=%22%238b8fa3%22 x=%2232%22 y=%2236%22 text-anchor=%22middle%22 font-size=%2212%22>IMG</text></svg>'">
           <div class="product-info">
@@ -1292,7 +1335,7 @@
               ${p.discountPercent ? '<span class="discount">-' + p.discountPercent + '%</span>' : ''}
             </div>
           </div>
-          <div style="display:flex;gap:4px;align-items:center;flex-shrink:0">
+          <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap">
             ${status === 'pending' ? '<button class="btn-outline btn-small" onclick="moveTop(' + p.id + ')" title="Mover para o topo">⬆️</button>' : ''}
             ${status === 'pending' ? '<button class="btn-outline btn-small" onclick="moveBottom(' + p.id + ')" title="Mover para o fundo">⬇️</button>' : ''}
             ${status === 'pending' ? `<button class="btn-outline btn-small" onclick='editProduct(${JSON.stringify(p).replace(/'/g, "&#39;")})' title="Editar">✏️</button>` : ''}
@@ -1702,10 +1745,10 @@
         } else if (wa.initialized && wa.qr) {
           badge.innerHTML = '<span class="badge badge-yellow">Aguardando scan</span>';
           statusDiv.innerHTML = `
-            <div style="text-align:center;padding:20px;background:var(--surface2);border-radius:8px">
+            <div class="qr-box" style="text-align:center;padding:20px;background:var(--surface2);border-radius:8px">
               <p style="font-weight:600;margin-bottom:12px;color:var(--yellow)">Escaneie o QR Code com seu WhatsApp</p>
-              <div style="background:white;display:inline-block;padding:16px;border-radius:12px">
-                <img id="qr-img" style="width:256px;height:256px" alt="QR Code">
+              <div class="qr-wrap">
+                <img id="qr-img" class="qr-img" alt="QR Code">
               </div>
               <p style="font-size:12px;color:var(--text2);margin-top:12px">WhatsApp > Menu > Aparelhos conectados > Conectar aparelho</p>
             </div>`;
