@@ -218,6 +218,51 @@
       gap: 6px;
     }
 
+    /* Toggle stat-card (piloto automatico) */
+    .stat-card.toggle-card {
+      appearance: none;
+      font-family: inherit;
+      color: inherit;
+      width: 100%;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .stat-card.toggle-card:hover {
+      border-color: var(--accent2);
+    }
+    .stat-card.toggle-card:active {
+      transform: translateY(0) scale(0.98);
+    }
+    .stat-card.toggle-card:focus-visible {
+      outline: 2px solid var(--accent2);
+      outline-offset: 2px;
+    }
+    .stat-card.toggle-card.is-on {
+      border-color: rgba(16, 185, 129, 0.45);
+      box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.18), var(--shadow-card);
+    }
+    .stat-card.toggle-card.is-on .number { color: var(--green); }
+    .stat-card.toggle-card.is-off .number { color: var(--red); }
+    .stat-card.toggle-card:disabled {
+      cursor: wait;
+      opacity: 0.7;
+      transform: none;
+    }
+    .stat-card.toggle-card .hint {
+      font-size: 11px;
+      color: var(--text2);
+      opacity: 0.75;
+      margin-top: 2px;
+      display: block;
+    }
+
+    @media (hover: none) {
+      .stat-card.toggle-card:active {
+        border-color: var(--accent2);
+      }
+    }
+
     /* Tabs */
     .tabs {
       display: flex;
@@ -629,10 +674,11 @@
         <div class="number" id="stat-groups">-</div>
         <div class="label">👥 Grupos Ativos</div>
       </div>
-      <div class="stat-card">
+      <button type="button" class="stat-card toggle-card" id="stat-scheduler-card" onclick="toggleAutopilot()" aria-pressed="false" title="Clique para ligar ou desligar o piloto automático">
         <div class="number" id="stat-scheduler">-</div>
         <div class="label">⚙️ Piloto Automático</div>
-      </div>
+        <span class="hint">Toque para ligar/desligar</span>
+      </button>
     </div>
 
     <nav class="tabs">
@@ -1168,6 +1214,10 @@
         document.getElementById('stat-posted').textContent = data.posted;
         document.getElementById('stat-groups').textContent = data.activeGroups;
         document.getElementById('stat-scheduler').textContent = data.schedulerActive ? 'ON' : 'OFF';
+        const schedulerCard = document.getElementById('stat-scheduler-card');
+        schedulerCard.classList.toggle('is-on', data.schedulerActive);
+        schedulerCard.classList.toggle('is-off', !data.schedulerActive);
+        schedulerCard.setAttribute('aria-pressed', String(data.schedulerActive));
 
         const tg = data.messengers.find(m => m.platform === 'telegram');
         const dot = document.querySelector('.status-dot');
@@ -1514,6 +1564,40 @@
       currentInterval = val;
       renderIntervalButtons();
       await savePostingConfig();
+    }
+
+    let autopilotBusy = false;
+
+    async function toggleAutopilot() {
+      if (autopilotBusy) return;
+      autopilotBusy = true;
+
+      const card = document.getElementById('stat-scheduler-card');
+      card.disabled = true;
+
+      try {
+        const current = await api('/posting-config');
+        if (current.error) throw new Error(current.error);
+
+        const enabled = !current.enabled;
+        const result = await api('/posting-config', {
+          method: 'PUT',
+          body: { enabled, intervalMinutes: current.intervalMinutes },
+        });
+        if (result.error) throw new Error(result.error);
+
+        showToast(enabled
+          ? '🚀 Piloto automático ativado — postando a cada ' + formatInterval(current.intervalMinutes)
+          : '⏸ Piloto automático desativado');
+
+        await loadStatus();
+        await loadPostingConfig();
+      } catch (err) {
+        showToast('Erro ao alternar piloto automático: ' + err.message, true);
+      } finally {
+        card.disabled = false;
+        autopilotBusy = false;
+      }
     }
 
     async function savePostingConfig() {
