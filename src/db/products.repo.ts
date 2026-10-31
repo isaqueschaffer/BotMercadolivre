@@ -58,7 +58,9 @@ export function getNextPending(): Product | null {
   const db = getDb();
   const result = db.exec(
     `SELECT * FROM products WHERE status = 'pending'
-     ORDER BY sort_order DESC, source = 'manual' DESC, added_at ASC LIMIT 1`
+     ORDER BY sort_order DESC, source = 'manual' DESC,
+              (coupon_code IS NOT NULL AND coupon_code != '') DESC,
+              added_at ASC LIMIT 1`
   );
   if (!result[0] || result[0].values.length === 0) return null;
 
@@ -117,7 +119,9 @@ export function getPendingCount(): number {
 export function getProductsByStatus(status: ProductStatus, limit = 10): Product[] {
   const db = getDb();
   const orderBy = status === 'pending'
-    ? 'ORDER BY sort_order DESC, source = \'manual\' DESC, added_at ASC'
+    ? `ORDER BY sort_order DESC, source = 'manual' DESC,
+               (coupon_code IS NOT NULL AND coupon_code != '') DESC,
+               added_at ASC`
     : 'ORDER BY posted_at DESC, added_at DESC';
   const result = db.exec(
     `SELECT * FROM products WHERE status = ? ${orderBy} LIMIT ?`,
