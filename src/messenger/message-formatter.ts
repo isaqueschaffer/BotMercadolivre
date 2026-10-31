@@ -6,6 +6,12 @@ function formatPrice(value: number): string {
   return value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
 
+const LONG_CODE_THRESHOLD = 20;
+
+function isOpaqueCouponToken(code: string): boolean {
+  return code.length > LONG_CODE_THRESHOLD;
+}
+
 function shortTitle(product: Product): string {
   return product.title
     .replace(/\s+(Cor|Color)\s+\w+$/i, '')
@@ -32,7 +38,12 @@ function formatTelegram(product: Product): string {
   }
 
   if (product.couponCode) {
-    lines.push(`⚠️ cupom: <b>${escapeHtml(product.couponCode)}</b>`);
+    if (isOpaqueCouponToken(product.couponCode)) {
+      lines.push('⚠️ cupom (copie e cole em "Inserir código do cupom" no Mercado Livre):');
+      lines.push(`<code>${escapeHtml(product.couponCode)}</code>`);
+    } else {
+      lines.push(`⚠️ cupom: <b>${escapeHtml(product.couponCode)}</b>`);
+    }
   }
 
   lines.push('');
@@ -67,7 +78,12 @@ function formatWhatsApp(product: Product): string {
   }
 
   if (product.couponCode) {
-    lines.push(`⚠️ cupom: *${product.couponCode}*`);
+    if (isOpaqueCouponToken(product.couponCode)) {
+      lines.push('⚠️ cupom (copie e cole em "Inserir código do cupom" no Mercado Livre):');
+      lines.push('```' + product.couponCode + '```');
+    } else {
+      lines.push(`⚠️ cupom: *${product.couponCode}*`);
+    }
   }
 
   lines.push('');
