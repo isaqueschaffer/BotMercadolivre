@@ -2,6 +2,7 @@ import { getAutoDiscoveryConfig } from '../db/auto-discovery.repo';
 import { insertProduct, productExists } from '../db/products.repo';
 import { discoverByCategory, getSubcategories, DiscoveredProduct } from '../marketplace/mercadolivre/ml-api';
 import { generateHeadline } from './headline-generator';
+import { tryAttachPoolCoupon } from './coupon-sync';
 
 const POPULAR_CATEGORIES = [
   'MLB1648', // Informática
@@ -111,7 +112,7 @@ async function runDiscovery(force = false): Promise<number> {
 
     const headline = await generateHeadline(product.title, product.category);
 
-    insertProduct({
+    const productId = insertProduct({
       externalId: product.id,
       marketplace: 'mercadolivre',
       title: product.title,
@@ -130,6 +131,7 @@ async function runDiscovery(force = false): Promise<number> {
       source: 'auto',
       discountPercent: discount,
     });
+    await tryAttachPoolCoupon(productId, 'mercadolivre', product.category).catch(() => {});
     added++;
   }
 

@@ -13,7 +13,7 @@ import { getTrends, getCategories, discoverByCategory } from '../marketplace/mer
 import { getAutoDiscoveryConfig, updateAutoDiscoveryConfig } from '../db/auto-discovery.repo';
 import { getAutoDiscoveryStatus, runDiscoveryNow, restartAutoDiscovery } from '../services/auto-discovery';
 import { getCouponImportConfig, updateCouponImportConfig } from '../db/coupon-sync.repo';
-import { importCouponsFromHtml } from '../services/coupon-sync';
+import { importCouponsFromHtml, tryAttachPoolCoupon, getCouponPoolStats } from '../services/coupon-sync';
 import { generateHeadline, generateHeadlineOrThrow } from '../services/headline-generator';
 import { getAIConfig, updateAIConfig } from '../db/ai-config.repo';
 import { marketplaceManager } from '../marketplace/marketplace-manager';
@@ -72,6 +72,9 @@ export function createWebServer(
         source: 'manual',
         discountPercent: null,
       });
+      if (!couponCode) {
+        await tryAttachPoolCoupon(id, product.marketplace, product.category).catch(() => {});
+      }
       res.json({ success: true, id, product, headline: finalHeadline });
     } catch (err: any) {
       res.status(500).json({ error: err.message });
@@ -300,9 +303,10 @@ export function createWebServer(
     }
   });
 
-  // Coupon Sync (cupons do Mercado Livre — importação do HTML colado manualmente)
+  // Coupon Sync (cupons do Mercado Livre — importação do HTML colado manualmente,
+  // anexados por categoria a produtos existentes ou futuros da fila)
   app.get('/api/coupon-sync', (_req, res) => {
-    res.json(getCouponImportConfig());
+    res.json({ ...getCouponImportConfig(), pool: getCouponPoolStats() });
   });
 
   app.put('/api/coupon-sync', (req, res) => {
@@ -318,8 +322,8 @@ export function createWebServer(
     try {
       const { html } = req.body;
       if (!html) return res.status(400).json({ error: 'HTML é obrigatório' });
-      const added = await importCouponsFromHtml(html);
-      res.json({ success: true, added });
+      const result = await importCouponsFromHtml(html);
+      res.json({ success: true, ...result });
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }

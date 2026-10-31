@@ -109,12 +109,36 @@ export function runMigrations(db: Database): void {
       last_run_at     TEXT,
       last_status     TEXT,
       last_count      INTEGER NOT NULL DEFAULT 0,
+      last_attached   INTEGER NOT NULL DEFAULT 0,
+      last_pooled     INTEGER NOT NULL DEFAULT 0,
       last_error      TEXT,
       updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
     )
   `);
 
   db.run(`INSERT OR IGNORE INTO coupon_import_config (id) VALUES (1)`);
+
+  try { db.run('ALTER TABLE coupon_import_config ADD COLUMN last_attached INTEGER NOT NULL DEFAULT 0'); } catch {}
+  try { db.run('ALTER TABLE coupon_import_config ADD COLUMN last_pooled INTEGER NOT NULL DEFAULT 0'); } catch {}
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS coupon_pool (
+      id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+      campaign_id          TEXT NOT NULL UNIQUE,
+      category_title       TEXT,
+      code                 TEXT,
+      action_link          TEXT,
+      title                TEXT,
+      min_amount_text      TEXT,
+      cap_amount_text      TEXT,
+      expiration_text      TEXT,
+      consumed             INTEGER NOT NULL DEFAULT 0,
+      consumed_product_id  INTEGER,
+      imported_at          TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  db.run('CREATE INDEX IF NOT EXISTS idx_coupon_pool_consumed ON coupon_pool(consumed)');
 
   db.run(`
     CREATE TABLE IF NOT EXISTS ai_config (

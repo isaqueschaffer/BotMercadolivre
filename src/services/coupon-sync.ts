@@ -1,68 +1,120 @@
 import { parseCouponsFromHtml, ScrapedCoupon } from '../marketplace/mercadolivre/ml-coupons-parser';
-import { insertProduct, productExists } from '../db/products.repo';
+import { upsertCouponToPool, getAvailableCoupons, markCouponConsumed, getPoolStats } from '../db/coupon-pool.repo';
+import { getProductsByStatus, updateProductDetails } from '../db/products.repo';
+import { getTopLevelCategoryName } from '../marketplace/mercadolivre/ml-api';
 import { getCouponImportConfig, recordCouponImportRun } from '../db/coupon-sync.repo';
-
-const FALLBACK_URL = 'https://www.mercadolivre.com.br/cupons?source_page=mperfil';
 
 let importing = false;
 
+function normalizeCategory(s: string): string {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+}
+
+/** Só cupons com código "digitável" fazem sentido anexados a um produto qualquer —
+ * cupons só-com-link apontam para uma coleção própria, não para o produto postado. */
 function isUsable(c: ScrapedCoupon): boolean {
-  return Boolean(c.campaignId) && Boolean(c.code || c.actionLink);
+  return Boolean(c.campaignId) && Boolean(c.code) && Boolean(c.categoryTitle);
 }
 
-function buildHeadline(c: ScrapedCoupon): string {
-  const parts = [c.title];
-  if (c.minAmountText) parts.push(c.minAmountText);
-  if (c.capAmountText) parts.push(c.capAmountText);
-  return parts.filter(Boolean).join(' • ');
+/**
+ * Tenta casar um cupom disponível no pool com um produto recém-criado,
+ * pela categoria raiz do Mercado Livre. Deve ser chamada depois de inserir
+ * qualquer novo produto na fila (manual, auto-discovery, etc.).
+ */
+export async function tryAttachPoolCoupon(productId: number, marketplace: string, categoryId: string | null): Promise<boolean> {
+  if (marketplace !== 'mercadolivre' || !categoryId) return false;
+
+  const available = getAvailableCoupons();
+  if (available.length === 0) return false;
+
+  const topName = await getTopLevelCategoryName(categoryId);
+  if (!topName) return false;
+
+  const normalizedTop = normalizeCategory(topName);
+  const match = available.find(c => c.categoryTitle && normalizeCategory(c.categoryTitle) === normalizedTop);
+  if (!match) return false;
+
+  updateProductDetails(productId, { couponCode: match.code });
+  markCouponConsumed(match.id, productId);
+  console.log(`[CouponSync] Cupom ${match.code} anexado ao produto #${productId} (categoria: ${topName}).`);
+  return true;
 }
 
-export async function importCouponsFromHtml(html: string): Promise<number> {
+async function attachToExistingPending(coupon: ScrapedCoupon, candidates: { id: number; category: string | null }[], categoryNameCache: Map<string, string | null>): Promise<number | null> {
+  const normalizedCoupon = normalizeCategory(coupon.categoryTitle);
+
+  for (let i = 0; i < candidates.length; i++) {
+    const p = candidates[i];
+    if (!p.category) continue;
+
+    let name = categoryNameCache.get(p.category);
+    if (name === undefined) {
+      name = await getTopLevelCategoryName(p.category);
+      categoryNameCache.set(p.category, name);
+    }
+    if (name && normalizeCategory(name) === normalizedCoupon) {
+      candidates.splice(i, 1);
+      return p.id;
+    }
+  }
+
+  return null;
+}
+
+export async function importCouponsFromHtml(html: string): Promise<{ attached: number; pooled: number }> {
   if (importing) throw new Error('Já existe uma importação de cupons em andamento.');
   importing = true;
 
   try {
     const config = getCouponImportConfig();
-    const coupons = parseCouponsFromHtml(html);
-    const usable = coupons.filter(isUsable);
+    const coupons = parseCouponsFromHtml(html).filter(isUsable);
 
-    let added = 0;
-    for (const c of usable) {
-      if (added >= config.maxPerRun) break;
+    const pendingProducts = getProductsByStatus('pending', 500)
+      .filter(p => p.marketplace === 'mercadolivre' && !p.couponCode)
+      .map(p => ({ id: p.id, category: p.category }));
 
-      const externalId = `CUPOM-${c.campaignId}`;
-      if (productExists(externalId, 'mercadolivre')) continue;
+    const categoryNameCache = new Map<string, string | null>();
+    let attached = 0;
+    let pooled = 0;
 
-      insertProduct({
-        externalId,
-        marketplace: 'mercadolivre',
-        title: c.sampleItemAlt || c.title,
-        headline: buildHeadline(c),
-        price: 0,
-        originalPrice: null,
-        currency: 'BRL',
-        imageUrl: c.sampleImageUrl || 'https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/5.21.22/mercadolibre/favicon.svg',
-        productUrl: c.actionLink || FALLBACK_URL,
-        affiliateUrl: null,
-        category: c.categoryTitle || null,
-        condition: null,
-        soldQuantity: null,
-        freeShipping: false,
-        couponCode: c.code,
-        source: 'auto',
-        discountPercent: null,
+    for (const c of coupons) {
+      if (attached + pooled >= config.maxPerRun) break;
+
+      // Garante que o cupom existe no pool (idempotente por campaignId) mesmo se já tiver sido importado antes.
+      const poolId = upsertCouponToPool({
+        campaignId: c.campaignId,
+        categoryTitle: c.categoryTitle,
+        code: c.code,
+        actionLink: c.actionLink,
+        title: c.title,
+        minAmountText: c.minAmountText,
+        capAmountText: c.capAmountText,
+        expirationText: c.expirationText,
       });
-      added++;
+
+      const productId = await attachToExistingPending(c, pendingProducts, categoryNameCache);
+
+      if (productId) {
+        updateProductDetails(productId, { couponCode: c.code });
+        markCouponConsumed(poolId, productId);
+        attached++;
+      } else {
+        pooled++;
+      }
     }
 
-    console.log(`[CouponSync] ${added} cupons novos adicionados à fila (de ${coupons.length} encontrados no HTML).`);
-    recordCouponImportRun('ok', added, null);
-    return added;
+    console.log(`[CouponSync] ${attached} cupons anexados a produtos existentes, ${pooled} aguardando produto compatível.`);
+    recordCouponImportRun('ok', attached, pooled, null);
+    return { attached, pooled };
   } catch (err) {
     console.error('[CouponSync] Erro ao importar cupons:', err);
-    recordCouponImportRun('error', 0, (err as Error).message);
+    recordCouponImportRun('error', 0, 0, (err as Error).message);
     throw err;
   } finally {
     importing = false;
   }
+}
+
+export function getCouponPoolStats(): { available: number; consumed: number } {
+  return getPoolStats();
 }

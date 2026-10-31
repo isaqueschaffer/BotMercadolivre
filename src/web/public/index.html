@@ -1018,6 +1018,11 @@
           Com a sua conta logada, abra <code>mercadolivre.com.br/cupons</code>, aperte <code>Ctrl+U</code> (ver código-fonte),
           selecione tudo (<code>Ctrl+A</code>) e copie (<code>Ctrl+C</code>). Cole o conteúdo abaixo.
         </p>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px">
+          Cada cupom é casado pela categoria com um produto da fila: se já existir um produto pendente da mesma categoria
+          (sem cupom), o código é anexado direto nele — não gera post avulso. Cupons sem produto compatível no momento
+          ficam esperando no "pool" e são anexados automaticamente no primeiro produto futuro daquela categoria.
+        </p>
         <textarea id="cs-html-input" rows="6" style="width:100%;font-family:monospace;font-size:12px" placeholder="Cole aqui o HTML (Ctrl+U) da página de cupons..."></textarea>
         <div style="display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap">
           <button class="btn-primary btn-small" onclick="importCouponHtml()">Importar Cupons</button>
@@ -1027,6 +1032,7 @@
           </label>
         </div>
         <div id="cs-last-run" style="font-size:13px;color:var(--text2);margin-top:16px"></div>
+        <div id="cs-pool-stats" style="font-size:13px;color:var(--text2);margin-top:6px"></div>
       </div>
     </div>
 
@@ -2040,9 +2046,14 @@
         const lastRun = document.getElementById('cs-last-run');
         if (data.lastRunAt) {
           const statusText = { ok: '✅ ok', error: '⚠️ erro' }[data.lastStatus] || data.lastStatus;
-          lastRun.textContent = `Última importação: ${new Date(data.lastRunAt).toLocaleString('pt-BR')} — ${statusText} — ${data.lastCount} cupons adicionados` + (data.lastError ? ` (${data.lastError})` : '');
+          lastRun.textContent = `Última importação: ${new Date(data.lastRunAt).toLocaleString('pt-BR')} — ${statusText} — ${data.lastAttached} anexados, ${data.lastPooled} no pool` + (data.lastError ? ` (${data.lastError})` : '');
         } else {
           lastRun.textContent = 'Ainda não importou nenhum cupom.';
+        }
+
+        const poolStats = document.getElementById('cs-pool-stats');
+        if (data.pool) {
+          poolStats.textContent = `Pool de cupons: ${data.pool.available} aguardando produto compatível, ${data.pool.consumed} já anexados.`;
         }
       } catch {}
     }
@@ -2069,7 +2080,7 @@
         const res = await api('/coupon-sync/import', { method: 'POST', body: { html } });
         if (res.error) throw new Error(res.error);
         document.getElementById('cs-html-input').value = '';
-        showToast(res.added + ' cupons adicionados à fila!');
+        showToast(`${res.attached} cupons anexados a produtos, ${res.pooled} aguardando produto compatível.`);
         loadStatus();
         loadProducts();
         loadCouponSync();

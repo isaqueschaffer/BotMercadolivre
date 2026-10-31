@@ -180,6 +180,26 @@ export async function getSubcategories(categoryId: string): Promise<Array<{ id: 
   }
 }
 
+const topLevelNameCache = new Map<string, string | null>();
+
+/** Resolve uma categoria (de qualquer nível) para o nome da categoria raiz, usada para casar com cupons. */
+export async function getTopLevelCategoryName(categoryId: string): Promise<string | null> {
+  if (topLevelNameCache.has(categoryId)) return topLevelNameCache.get(categoryId)!;
+
+  try {
+    const auth = await authHeaders();
+    const { data } = await axios.get<{ path_from_root?: Array<{ id: string; name: string }> }>(
+      `${BASE_URL}/categories/${categoryId}`, auth
+    );
+    const name = data.path_from_root?.[0]?.name || null;
+    topLevelNameCache.set(categoryId, name);
+    return name;
+  } catch {
+    topLevelNameCache.set(categoryId, null);
+    return null;
+  }
+}
+
 export async function getTrends(): Promise<Array<{ keyword: string; url: string }>> {
   const auth = await authHeaders();
   const { data } = await axios.get<Array<{ keyword: string; url: string }>>(
