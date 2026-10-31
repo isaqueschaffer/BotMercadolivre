@@ -28,7 +28,7 @@ export interface MarketplaceProvider {
   initialize(): Promise<void>;
   search(options: SearchOptions): Promise<MarketplaceProduct[]>;
   getProduct(externalId: string): Promise<MarketplaceProduct | null>;
-  generateAffiliateLink(productUrl: string): string;
+  generateAffiliateLink(productUrl: string): Promise<string>;
   getCategories(): Promise<Array<{ id: string; name: string }>>;
   isAuthenticated(): boolean;
   refreshAuth(): Promise<void>;
