@@ -25,7 +25,7 @@ export function createWebServer(
   getMessengers: () => MessengerProvider[],
 ) {
   const app = express();
-  app.use(express.json());
+  app.use(express.json({ limit: '25mb' }));
   app.use(express.static(path.join(__dirname, 'public')));
 
   // Status
@@ -407,6 +407,14 @@ export function createWebServer(
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }
+  });
+
+  // Garante respostas em JSON mesmo para erros do Express (ex: payload grande demais),
+  // já que o painel sempre espera JSON das rotas /api/*.
+  app.use((err: any, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (res.headersSent) return next(err);
+    const status = err?.status || err?.statusCode || 500;
+    res.status(status).json({ error: err?.message || 'Erro interno' });
   });
 
   return app;
