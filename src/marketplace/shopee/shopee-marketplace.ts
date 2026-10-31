@@ -42,8 +42,8 @@ export class ShopeeMarketplace implements MarketplaceProvider {
     return results[0] || null;
   }
 
-  async generateAffiliateLink(productUrl: string): Promise<string> {
-    // Placeholder; async short link generation handled during getProduct
+  generateAffiliateLink(productUrl: string): string {
+    // Synchronous signature placeholder; async short link generation handled during getProduct
     return productUrl;
   }
 

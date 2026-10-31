@@ -24,7 +24,7 @@ export class MercadoLivreMarketplace implements MarketplaceProvider {
   async search(options: SearchOptions): Promise<MarketplaceProduct[]> {
     const results = await searchProducts(options);
 
-    return Promise.all(results.map(async item => ({
+    return results.map(item => ({
       externalId: item.id,
       marketplace: this.name,
       title: item.title,
@@ -33,12 +33,12 @@ export class MercadoLivreMarketplace implements MarketplaceProvider {
       currency: item.currency_id,
       imageUrl: getHighResImageUrl(item.thumbnail),
       productUrl: item.permalink,
-      affiliateUrl: await generateAffiliateLink(item.permalink),
+      affiliateUrl: generateAffiliateLink(item.permalink),
       category: item.category_id,
       condition: item.condition,
       soldQuantity: item.sold_quantity,
       freeShipping: item.shipping.free_shipping,
-    })));
+    }));
   }
 
   async getProduct(externalIdOrUrl: string): Promise<MarketplaceProduct | null> {
@@ -63,7 +63,7 @@ export class MercadoLivreMarketplace implements MarketplaceProvider {
         currency: item.currency_id,
         imageUrl,
         productUrl: item.permalink,
-        affiliateUrl: await generateAffiliateLink(item.permalink),
+        affiliateUrl: generateAffiliateLink(item.permalink),
         category: item.category_id,
         condition: item.condition,
         soldQuantity: item.sold_quantity,
@@ -101,7 +101,7 @@ export class MercadoLivreMarketplace implements MarketplaceProvider {
         currency: best.currency_id || 'BRL',
         imageUrl,
         productUrl,
-        affiliateUrl: await generateAffiliateLink(productUrl),
+        affiliateUrl: generateAffiliateLink(productUrl),
         category: best.category_id || '',
         condition: best.condition || 'new',
         soldQuantity: best.sold_quantity ?? 0,
@@ -112,7 +112,7 @@ export class MercadoLivreMarketplace implements MarketplaceProvider {
     }
   }
 
-  async generateAffiliateLink(productUrl: string): Promise<string> {
+  generateAffiliateLink(productUrl: string): string {
     return generateAffiliateLink(productUrl);
   }
 

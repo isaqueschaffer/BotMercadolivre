@@ -6,9 +6,9 @@ export function pickNextProduct(): Product | null {
   return getNextPending();
 }
 
-export async function ensureAffiliateLink(product: Product, marketplace: MarketplaceProvider): Promise<Product> {
+export function ensureAffiliateLink(product: Product, marketplace: MarketplaceProvider): Product {
   if (!product.affiliateUrl) {
-    const affiliateUrl = await marketplace.generateAffiliateLink(product.productUrl);
+    const affiliateUrl = marketplace.generateAffiliateLink(product.productUrl);
     updateAffiliateUrl(product.id, affiliateUrl);
     return { ...product, affiliateUrl };
   }

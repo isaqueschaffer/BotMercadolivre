@@ -24,7 +24,7 @@ export async function executePost(
     return false;
   }
 
-  product = await ensureAffiliateLink(product, marketplace);
+  product = ensureAffiliateLink(product, marketplace);
   console.log(`[Posting] Postando: ${product.title}`);
 
   let anySuccess = false;
