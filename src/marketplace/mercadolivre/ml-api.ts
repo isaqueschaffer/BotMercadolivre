@@ -153,20 +153,6 @@ export async function getItem(itemId: string): Promise<MLItemResponse> {
   return data;
 }
 
-/** Endpoint de debug temporário — retorna o JSON crú da API de preços do ML pra inspeção. */
-export async function getItemPricesRaw(itemId: string): Promise<any> {
-  const auth = await authHeaders();
-  const { data } = await axios.get(`${BASE_URL}/items/${itemId}/prices`, auth);
-  return data;
-}
-
-/** Endpoint de debug temporário — retorna o JSON crú completo do item (não só os campos tipados). */
-export async function getItemRaw(itemId: string): Promise<any> {
-  const auth = await authHeaders();
-  const { data } = await axios.get(`${BASE_URL}/items/${itemId}`, auth);
-  return data;
-}
-
 export async function getCategories(): Promise<Array<{ id: string; name: string }>> {
   const auth = await authHeaders();
   const { data } = await axios.get<Array<{ id: string; name: string }>>(

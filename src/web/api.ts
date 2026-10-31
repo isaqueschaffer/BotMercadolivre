@@ -9,7 +9,7 @@ import { MessengerProvider } from '../messenger/messenger.interface';
 import { executePost } from '../services/posting-service';
 import { restartScheduler, isSchedulerRunning } from '../scheduler/scheduler';
 import { fetchByQuery } from '../services/product-fetcher';
-import { getTrends, getCategories, discoverByCategory, getItemPricesRaw, getItemRaw } from '../marketplace/mercadolivre/ml-api';
+import { getTrends, getCategories, discoverByCategory } from '../marketplace/mercadolivre/ml-api';
 import { getAutoDiscoveryConfig, updateAutoDiscoveryConfig } from '../db/auto-discovery.repo';
 import { getAutoDiscoveryStatus, runDiscoveryNow, restartAutoDiscovery } from '../services/auto-discovery';
 import { getCouponImportConfig, updateCouponImportConfig } from '../db/coupon-sync.repo';
@@ -265,25 +265,6 @@ export function createWebServer(
       res.json(cats);
     } catch (err: any) {
       res.status(500).json({ error: err.message });
-    }
-  });
-
-  // TEMP debug — inspeção da API de preços do ML pra implementar preço no Pix. Remover depois.
-  app.get('/api/debug/item-prices/:id', async (req, res) => {
-    try {
-      const data = await getItemPricesRaw(req.params.id);
-      res.json(data);
-    } catch (err: any) {
-      res.status(500).json({ error: err.message, response: err.response?.data });
-    }
-  });
-
-  app.get('/api/debug/item-raw/:id', async (req, res) => {
-    try {
-      const data = await getItemRaw(req.params.id);
-      res.json(data);
-    } catch (err: any) {
-      res.status(500).json({ error: err.message, response: err.response?.data });
     }
   });
 
