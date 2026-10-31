@@ -12,6 +12,8 @@ import { fetchByQuery } from '../services/product-fetcher';
 import { getTrends, getCategories, discoverByCategory } from '../marketplace/mercadolivre/ml-api';
 import { getAutoDiscoveryConfig, updateAutoDiscoveryConfig } from '../db/auto-discovery.repo';
 import { getAutoDiscoveryStatus, runDiscoveryNow, restartAutoDiscovery } from '../services/auto-discovery';
+import { getCouponImportConfig, updateCouponImportConfig } from '../db/coupon-sync.repo';
+import { importCouponsFromHtml } from '../services/coupon-sync';
 import { generateHeadline, generateHeadlineOrThrow } from '../services/headline-generator';
 import { getAIConfig, updateAIConfig } from '../db/ai-config.repo';
 import { marketplaceManager } from '../marketplace/marketplace-manager';
@@ -292,6 +294,31 @@ export function createWebServer(
   app.post('/api/auto-discovery/run', async (_req, res) => {
     try {
       const added = await runDiscoveryNow();
+      res.json({ success: true, added });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Coupon Sync (cupons do Mercado Livre — importação do HTML colado manualmente)
+  app.get('/api/coupon-sync', (_req, res) => {
+    res.json(getCouponImportConfig());
+  });
+
+  app.put('/api/coupon-sync', (req, res) => {
+    try {
+      updateCouponImportConfig(req.body);
+      res.json({ success: true, config: getCouponImportConfig() });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/coupon-sync/import', async (req, res) => {
+    try {
+      const { html } = req.body;
+      if (!html) return res.status(400).json({ error: 'HTML é obrigatório' });
+      const added = await importCouponsFromHtml(html);
       res.json({ success: true, added });
     } catch (err: any) {
       res.status(500).json({ error: err.message });

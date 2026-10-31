@@ -103,6 +103,20 @@ export function runMigrations(db: Database): void {
   db.run(`INSERT OR IGNORE INTO posting_config (id) VALUES (1)`);
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS coupon_import_config (
+      id              INTEGER PRIMARY KEY CHECK (id = 1),
+      max_per_run     INTEGER NOT NULL DEFAULT 20,
+      last_run_at     TEXT,
+      last_status     TEXT,
+      last_count      INTEGER NOT NULL DEFAULT 0,
+      last_error      TEXT,
+      updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  db.run(`INSERT OR IGNORE INTO coupon_import_config (id) VALUES (1)`);
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS ai_config (
       id              INTEGER PRIMARY KEY CHECK (id = 1),
       provider        TEXT NOT NULL DEFAULT 'anthropic',

@@ -23,10 +23,12 @@ function formatTelegram(product: Product): string {
   lines.push(escapeHtml(product.title));
   lines.push('');
 
-  if (product.originalPrice && product.originalPrice > product.price) {
-    lines.push(`De: ${formatPrice(product.originalPrice)} | Por: <b>R$${formatPrice(product.price)}</b> 👑`);
-  } else {
-    lines.push(`Por: <b>R$${formatPrice(product.price)}</b> 👑`);
+  if (product.price > 0) {
+    if (product.originalPrice && product.originalPrice > product.price) {
+      lines.push(`De: ${formatPrice(product.originalPrice)} | Por: <b>R$${formatPrice(product.price)}</b> 👑`);
+    } else {
+      lines.push(`Por: <b>R$${formatPrice(product.price)}</b> 👑`);
+    }
   }
 
   if (product.couponCode) {
@@ -56,10 +58,12 @@ function formatWhatsApp(product: Product): string {
   lines.push(product.title);
   lines.push('');
 
-  if (product.originalPrice && product.originalPrice > product.price) {
-    lines.push(`De: ${formatPrice(product.originalPrice)} | Por: *R$${formatPrice(product.price)}* 👑`);
-  } else {
-    lines.push(`Por: *R$${formatPrice(product.price)}* 👑`);
+  if (product.price > 0) {
+    if (product.originalPrice && product.originalPrice > product.price) {
+      lines.push(`De: ${formatPrice(product.originalPrice)} | Por: *R$${formatPrice(product.price)}* 👑`);
+    } else {
+      lines.push(`Por: *R$${formatPrice(product.price)}* 👑`);
+    }
   }
 
   if (product.couponCode) {
